@@ -29,6 +29,7 @@
             Entity e = new Entity();
             Allievi a = e.getEm().find(Allievi.class, Long.parseLong(request.getParameter("id")));
             List<Nazioni_rc> cittadinanza = e.findAll(Nazioni_rc.class);
+            List<Nazioni_rc> nascitaconCF = e.listaNazioni_rc();
             List<Item> regioni = e.listaRegioni();
             List<TitoliStudio> ts = e.listaTitoliStudio();
             List<CPI> cpi = e.listaCPI();
@@ -153,8 +154,9 @@
                                                                             <div class="dropdown bootstrap-select form-control kt-" id="stato_div" style="padding: 0;">
                                                                                 <select class="form-control kt-select2-general obbligatory" id="stato" name="stato"  style="width: 100%">
                                                                                     <option value="-">Seleziona Stato nascita</option>
-                                                                                    <%for (Nazioni_rc c : cittadinanza) {
-                                                                                           if (c.getCodicefiscale().equalsIgnoreCase(a.getStato_nascita()) || c.getIstat().equalsIgnoreCase(a.getStato_nascita())) {%>
+                                                                                    <%for (Nazioni_rc c : nascitaconCF) {
+                                                                                            if (c.getCodicefiscale().equalsIgnoreCase(a.getStato_nascita())
+                                                                                                    || c.getIstat().equalsIgnoreCase(a.getStato_nascita())) {%>
                                                                                     <option selected value="<%=c.getCodicefiscale()%>"><%=c.getNome()%></option>
                                                                                     <%} else {%>
                                                                                     <option value="<%=c.getCodicefiscale()%>"><%=c.getNome()%></option>
@@ -205,13 +207,19 @@
                                                                         <label id="msg_cf"></label>
                                                                     </div>
                                                                     <div class="form-row">
+                                                                        <div class="form-group col-xl-3 col-lg-3">
+                                                                            <label>Telefono (Cellulare, senza +39) </label><label class="kt-font-danger kt-font-boldest">*</label>
+                                                                            <input type="text" class="form-control obbligatory" id="telefono" name="telefono" value="<%=a.getTelefono()%>" onkeypress="return isNumber(event);" />
+                                                                        </div>
                                                                         <div class="form-group col-xl-3 col-lg-6">
                                                                             <label>Cittadinanza</label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <div class="dropdown bootstrap-select form-control kt-" id="cittadinanza_div" style="padding: 0;">
                                                                                 <select class="form-control kt-select2-general obbligatory" id="cittadinanza" name="cittadinanza"  style="width: 100%">
                                                                                     <option value="-">Seleziona Cittadinanza</option>
                                                                                     <%for (Nazioni_rc c : cittadinanza) {
-                                                                                            if (Integer.parseInt(c.getIstat()) == Integer.parseInt(a.getCittadinanza().getIstat())) {%>
+                                                                                            if (c.getIstat().equalsIgnoreCase(a.getCittadinanza().getCodicefiscale())
+                                                                                                    || c.getIstat().equalsIgnoreCase(a.getCittadinanza().getIstat())) {
+                                                                                    %>
                                                                                     <option selected value="<%=c.getId()%>"><%=c.getNome()%></option>
                                                                                     <%} else {%>
                                                                                     <option value="<%=c.getId()%>"><%=c.getNome()%></option>
@@ -220,22 +228,15 @@
                                                                                 </select>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="form-group col-xl-3 col-lg-3">
-                                                                            <label>Telefono </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            <input type="text" class="form-control obbligatory" id="telefono" name="telefono" value="<%=a.getTelefono()%>" onkeypress="return isNumber(event);" />
-                                                                        </div>        
                                                                     </div>
                                                                     <h5>Residenza</h5>
                                                                     <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
                                                                     <div class="form-row">
-                                                                        <div class="form-group col-lg-4">
+                                                                        <div class="form-group col-lg-6">
                                                                             <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control obbligatory" id="indirizzores" name="indirizzores" value="<%=a.getIndirizzoresidenza()%>" />
                                                                         </div>
-                                                                        <div class="form-group col-lg-2">
-                                                                            <label>Civico </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            <input type="text" class="form-control obbligatory" id="civicores" name="civicores" value="<%=a.getCivicoresidenza()%>" />
-                                                                        </div>
+                                                                        <input type="hidden" class="form-control" id="civicores" name="civicores" value="<%=a.getCivicoresidenza()%>" />
                                                                         <div class="form-group col-lg-2">
                                                                             <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control obbligatory" id="capres" name="capres" value="<%=a.getCapresidenza()%>" onkeypress="return isNumber(event);"/>
@@ -288,14 +289,11 @@
                                                                     <h5>Domicilio <label class="kt-font-danger kt-font-boldest" style="display:none;" id="msgdom">Il domicilio corrisponde con la residenza</label></h5>
                                                                     <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
                                                                     <div class="form-row">
-                                                                        <div class="form-group col-lg-4">
+                                                                        <div class="form-group col-lg-6">
                                                                             <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control" id="indirizzodom" name="indirizzodom" value="<%=a.getIndirizzodomicilio()%>" />
                                                                         </div>
-                                                                        <div class="form-group col-lg-2">
-                                                                            <label>Civico </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            <input type="text" class="form-control" id="civicodom" name="civicodom" value="<%=a.getCivicodomicilio()%>" />
-                                                                        </div>
+                                                                        <input type="hidden" class="form-control" id="civicodom" name="civicodom" value="<%=a.getCivicodomicilio()%>" />
                                                                         <div class="form-group col-lg-2">
                                                                             <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control" id="capdom" name="capdom" value="<%=a.getCapdomicilio()%>" onkeypress="return isNumber(event);"/>
@@ -334,8 +332,35 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <h5>Documentazione</h5>
+
+                                                                    <h5>Dati</h5>
                                                                     <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
+                                                                    <div class="form-row">
+                                                                        <div class="form-group col-xl-4 col-lg-6">
+                                                                            <label>Requisito di partecipazione</label><label class="kt-font-danger kt-font-boldest">*</label>
+                                                                            <div class="dropdown bootstrap-select form-control kt-" id="canale_div" style="padding: 0;">
+                                                                                <%
+                                                                                    String p_v01 = a.getPartecipazione().equals("01") ? "selected" : "";
+                                                                                    String p_v02 = a.getPartecipazione().equals("02") ? "selected" : "";
+                                                                                    String p_v03 = a.getPartecipazione().equals("03") ? "selected" : "";
+                                                                                    String display_part = a.getPartecipazione().equals("03") ? "block" : "none";
+                                                                                    String dipendente = a.getPartecipazione().equals("03") ? a.getDipendente() : "";
+                                                                                    
+                                                                                %>
+                                                                                <select class="form-control kt-select2-general obbligatory" 
+                                                                                        id="partecipazione" name="partecipazione"  style="width: 100%"  onchange="checkdipendente();">
+                                                                                    <option value="-">Seleziona requisito</option>
+                                                                                    <option value="01" <%=p_v01%>>TARGET 1 - Disoccupato/inoccupato, in possesso di DID in corso di validità</option>
+                                                                                    <option value="02" <%=p_v02%>>TARGET 2 - Persona in condizione di disagio socio-economico, in possesso di DID in corso di validità</option>
+                                                                                    <option value="03" <%=p_v03%>>TARGET 3 - Persona destinataria di politiche passive (CIG)</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="form-group col-xl-6 col-lg-6" id="dipendente_div" style="display: <%=display_part%>;">
+                                                                            <label>Dipendente presso l'azienda </label><label class="kt-font-danger kt-font-boldest">*</label>
+                                                                            <input type="text" class="form-control text-uppercase" id="dipendente" name="dipendente" value="<%=dipendente%>" />
+                                                                        </div>
+                                                                    </div>  
                                                                     <div class="form-row">
                                                                         <div class="form-group col-lg-4">
                                                                             <label>Titolo di studio </label><label class="kt-font-danger kt-font-boldest">*</label>
@@ -384,37 +409,13 @@
                                                                                 </select>
                                                                             </div>
                                                                         </div>
-                                                                    </div>  
-                                                                    <div class="form-row">
                                                                         <div class="form-group col-lg-4">
                                                                             <label>Email </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control" id="email" name="email" value="<%=a.getEmail()%>" />
                                                                         </div>
-                                                                        <div class="form-group col-lg-4">
-                                                                            <label>Centro per l'impiego di competenza </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            <div class="dropdown bootstrap-select form-control kt-" id="cpi_div" style="padding: 0;">
-                                                                                <select class="form-control kt-select2-general obbligatory" id="cpi" name="cpi"  style="width: 100%">
-                                                                                    <option value="-">Seleziona CPI</option>
-                                                                                    <%for (CPI c : cpi) {
-                                                                                            if (c.getId().equals(a.getCpi().getId())) {%>
-                                                                                    <option value="<%=c.getId()%>" selected><%=c.getDescrizione()%></option>
-                                                                                    <%} else {%>
-                                                                                    <option value="<%=c.getId()%>"><%=c.getDescrizione()%></option>
-                                                                                    <%}
-                                                                                        }%>
-                                                                                </select>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="form-group col-lg-2">
-                                                                            <label>Data iscrizione G.G. </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            <input type="text" class="form-control obbligatory" name="iscrizionegg" id="iscrizionegg" value="<%=sdf.format(a.getIscrizionegg())%>"  />
-                                                                        </div>
-                                                                        <div class="form-group col-lg-2">
-                                                                            <label>Presa in carico CPI </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            <input type="text" class="form-control obbligatory" name="datacpi" id="datacpi" value="<%=sdf.format(a.getDatacpi())%>"  />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="form-row">
+                                                                        <input type="hidden" value="2024-01-01" name="iscrizionegg" id="iscrizionegg" />
+                                                                        <input type="hidden" value="2024-01-01" name="datacpi" id="datacpi" />
+                                                                        <input type="hidden" value="A0000000000" name="cpi" id="cpi" />
                                                                         <div class="form-group col-xl-4 col-lg-6">
                                                                             <label>Motivazione </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <div class="dropdown bootstrap-select form-control kt-" id="motivazione_div" style="padding: 0;">
@@ -508,32 +509,32 @@
         <script src="<%=src%>/assets/app/custom/general/crud/forms/widgets/bootstrap-datepicker.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/vendors/general/bootstrap-datepicker/dist/js/bootstrap-datepicker.js" type="text/javascript"></script>
         <script type="text/javascript">
-                                                                                var KTAppOptions = {
-                                                                                    "colors": {
-                                                                                        "state": {
-                                                                                            "brand": "#5d78ff",
-                                                                                            "dark": "#282a3c",
-                                                                                            "light": "#ffffff",
-                                                                                            "primary": "#5867dd",
-                                                                                            "success": "#34bfa3",
-                                                                                            "info": "#36a3f7",
-                                                                                            "warning": "#ffb822"
-                                                                                        },
-                                                                                        "base": {
-                                                                                            "label": ["#c5cbe3", "#a1a8c3", "#3d4465", "#3e4466"],
-                                                                                            "shape": ["#f0f3ff", "#d9dffa", "#afb4d4", "#646c9a"]
-                                                                                        }
-                                                                                    }
-                                                                                };
+                                                                                            var KTAppOptions = {
+                                                                                                "colors": {
+                                                                                                    "state": {
+                                                                                                        "brand": "#5d78ff",
+                                                                                                        "dark": "#282a3c",
+                                                                                                        "light": "#ffffff",
+                                                                                                        "primary": "#5867dd",
+                                                                                                        "success": "#34bfa3",
+                                                                                                        "info": "#36a3f7",
+                                                                                                        "warning": "#ffb822"
+                                                                                                    },
+                                                                                                    "base": {
+                                                                                                        "label": ["#c5cbe3", "#a1a8c3", "#3d4465", "#3e4466"],
+                                                                                                        "shape": ["#f0f3ff", "#d9dffa", "#afb4d4", "#646c9a"]
+                                                                                                    }
+                                                                                                }
+                                                                                            };
         </script>
 
         <script>
             jQuery(document).ready(function () {
-                if ($('#cittadinanza').val() == '-') {
+                if ($('#cittadinanza').val() === '-') {
                     $('#cittadinanza').val('000');
                     $('#cittadinanza').trigger('change');
                 }
-                if ($('#stato').val() != '-') {
+                if ($('#stato').val() !== '-') {
                     setCittadinanza();
                 }
                 $('#kt_widget5_tab1_content').addClass("active");
@@ -551,7 +552,7 @@
             });
 
             $('#codicefiscale').on("change", function () {
-                if ($('#codicefiscale').val() != '<%=a.getCodicefiscale()%>') {
+                if ($('#codicefiscale').val() !== '<%=a.getCodicefiscale()%>') {
                     if (checkCF($('#codicefiscale'))) {
                         CFPresent();
                     }
@@ -565,12 +566,12 @@
                     async: false,
                     url: '<%=request.getContextPath()%>/OperazioniSA?type=checkEmail&email=' + $('#email').val(),
                     success: function (data) {
-                        if (data != null && data != 'null') {
+                        if (data !== null && data !== 'null') {
                             swal.fire({
                                 "title": 'Errore',
                                 "html": "<h3>Email già presente</h3>",
                                 "type": "error",
-                                cancelButtonClass: "btn btn-io-n",
+                                cancelButtonClass: "btn btn-io-n"
                             });
                             $('#email').attr("class", "form-control is-invalid");
                             err = true;
@@ -590,12 +591,12 @@
                     async: false,
                     url: '<%=request.getContextPath()%>/OperazioniSA?type=checkCF&cf=' + $('#codicefiscale').val(),
                     success: function (data) {
-                        if (data != null && data != 'null') {
+                        if (data !== null && data !== 'null') {
                             swal.fire({
                                 "title": 'Errore',
                                 "html": "<h3>Codice fiscale già presente</h3>",
                                 "type": "error",
-                                cancelButtonClass: "btn btn-io-n",
+                                cancelButtonClass: "btn btn-io-n"
                             });
                             $('#codicefiscale').attr("class", "form-control is-invalid");
                             err = true;
@@ -640,13 +641,13 @@
             function selectProvinciaN() {
                 var myTown = "<%=a.getComune_nascita().getNome_provincia()%>";
                 $("#provincianascita").empty();
-                if ($('#regionenascita').val() != '-') {
+                if ($('#regionenascita').val() !== '-') {
                     startBlockUILoad("#provincianascita_div");
                     $("#provincianascita").append('<option value="-">Seleziona Provincia</option>');
                     $.get('<%=request.getContextPath()%>/Login?type=getProvincia&regione=' + $('#regionenascita').val(), function (resp) {
                         var json = JSON.parse(resp);
                         for (var i = 0; i < json.length; i++) {
-                            if (myTown.toLowerCase() == json[i].value.toLowerCase()) {
+                            if (myTown.toLowerCase() === json[i].value.toLowerCase()) {
                                 $("#provincianascita").append('<option selected value="' + json[i].value + '">' + json[i].desc + '</option>');
                             } else {
                                 $("#provincianascita").append('<option value="' + json[i].value + '">' + json[i].desc + '</option>');
@@ -661,13 +662,13 @@
             function selectComuneN(provincia) {
                 var myTown = '<%=a.getComune_nascita().getId()%>';
                 $("#comunenascita").empty();
-                if (provincia != '-') {
+                if (provincia !== '-') {
                     startBlockUILoad("#comunenascita_div");
                     $("#comunenascita").append('<option value="-">Seleziona Comune</option>');
                     $.get('<%=request.getContextPath()%>/Login?type=getComune&provincia=' + provincia, function (resp) {
                         var json = JSON.parse(resp);
                         for (var i = 0; i < json.length; i++) {
-                            if (myTown.toLowerCase() == json[i].value.toLowerCase()) {
+                            if (myTown.toLowerCase() === json[i].value.toLowerCase()) {
                                 $("#comunenascita").append('<option selected value="' + json[i].value + '">' + json[i].desc + '</option>');
                             } else {
                                 $("#comunenascita").append('<option value="' + json[i].value + '">' + json[i].desc + '</option>');
@@ -683,13 +684,13 @@
             function selectProvinciaR() {
                 var myTown = "<%=a.getComune_residenza().getNome_provincia()%>";
                 $("#provinciares").empty();
-                if ($('#regioneres').val() != '-') {
+                if ($('#regioneres').val() !== '-') {
                     startBlockUILoad("#provinciares_div");
                     $("#provinciares").append('<option value="-">Seleziona Provincia</option>');
                     $.get('<%=request.getContextPath()%>/Login?type=getProvincia&regione=' + $('#regioneres').val(), function (resp) {
                         var json = JSON.parse(resp);
                         for (var i = 0; i < json.length; i++) {
-                            if (myTown.toLowerCase() == json[i].value.toLowerCase()) {
+                            if (myTown.toLowerCase() === json[i].value.toLowerCase()) {
                                 $("#provinciares").append('<option selected value="' + json[i].value + '">' + json[i].desc + '</option>');
                             } else {
                                 $("#provinciares").append('<option value="' + json[i].value + '">' + json[i].desc + '</option>');
@@ -704,13 +705,13 @@
             function selectComuneR(provincia) {
                 var myTown = "<%=a.getComune_residenza().getId()%>";
                 $("#comuneres").empty();
-                if (provincia != '-') {
+                if (provincia !== '-') {
                     startBlockUILoad("#comuneres_div");
                     $("#comuneres").append('<option value="-">Seleziona Comune</option>');
                     $.get('<%=request.getContextPath()%>/Login?type=getComune&provincia=' + provincia, function (resp) {
                         var json = JSON.parse(resp);
                         for (var i = 0; i < json.length; i++) {
-                            if (myTown.toLowerCase() == json[i].value.toLowerCase()) {
+                            if (myTown.toLowerCase() === json[i].value.toLowerCase()) {
                                 $("#comuneres").append('<option selected value="' + json[i].value + '">' + json[i].desc + '</option>');
                             } else {
                                 $("#comuneres").append('<option value="' + json[i].value + '">' + json[i].desc + '</option>');
@@ -726,13 +727,13 @@
             function selectProvinciaD() {
                 var myTown = "<%=a.getComune_domicilio().getNome_provincia()%>";
                 $("#provinciadom").empty();
-                if ($('#regionedom').val() != '-') {
+                if ($('#regionedom').val() !== '-') {
                     startBlockUILoad("#provinciadom_div");
                     $("#provinciadom").append('<option value="-">Seleziona Provincia</option>');
                     $.get('<%=request.getContextPath()%>/Login?type=getProvincia&regione=' + $('#regionedom').val(), function (resp) {
                         var json = JSON.parse(resp);
                         for (var i = 0; i < json.length; i++) {
-                            if (myTown.toLowerCase() == json[i].value.toLowerCase()) {
+                            if (myTown.toLowerCase() === json[i].value.toLowerCase()) {
                                 $("#provinciadom").append('<option selected value="' + json[i].value + '">' + json[i].desc + '</option>');
                             } else {
                                 $("#provinciadom").append('<option value="' + json[i].value + '">' + json[i].desc + '</option>');
@@ -747,13 +748,13 @@
             function selectComuneD(provincia) {
                 var myTown = "<%=a.getComune_domicilio().getId()%>";
                 $("#comunedom").empty();
-                if (provincia != '-') {
+                if (provincia !== '-') {
                     startBlockUILoad("#comunedom_div");
                     $("#comunedom").append('<option value="-">Seleziona Comune</option>');
                     $.get('<%=request.getContextPath()%>/Login?type=getComune&provincia=' + provincia, function (resp) {
                         var json = JSON.parse(resp);
                         for (var i = 0; i < json.length; i++) {
-                            if (myTown.toLowerCase() == json[i].value.toLowerCase()) {
+                            if (myTown.toLowerCase() === json[i].value.toLowerCase()) {
                                 $("#comunedom").append('<option selected value="' + json[i].value + '">' + json[i].desc + '</option>');
                             } else {
                                 $("#comunedom").append('<option value="' + json[i].value + '">' + json[i].desc + '</option>');
@@ -771,7 +772,7 @@
             });
 
             function setCittadinanza() {
-                if ($('#stato').val() != '000' && $('#stato').val() != '99' && $('#stato').val() != '-') {
+                if ($('#stato').val() !== '000' && $('#stato').val() !== '99' && $('#stato').val() !== '-') {
                     $('#regionenascita').attr("disabled", true);
                     $('#provincianascita').attr("disabled", true);
                     $('#comunenascita').attr("disabled", true);
@@ -843,7 +844,7 @@
 
                 err = checkObblFieldsCustom() ? true : err;
                 if (checkCF($('#codicefiscale'))) {
-                    if ($('#codicefiscale').val() != '<%=a.getCodicefiscale()%>') {
+                    if ($('#codicefiscale').val() !== '<%=a.getCodicefiscale()%>') {
                         err = CFPresent() ? true : err;
                     }
                     err = checkinfoCF() ? true : err;
@@ -851,7 +852,7 @@
                     err = true;
                 }
                 if (!checkEmail($('#email'))) {
-                    if ($('#email').val() != '<%=a.getEmail()%>') {
+                    if ($('#email').val() !== '<%=a.getEmail()%>') {
                         err = EmailPresente();
                     }
                 } else {
@@ -910,7 +911,7 @@
                                 "title": 'Errore',
                                 "text": "Riprovare, se l'errore persiste contattare il servizio clienti",
                                 "type": "error",
-                                cancelButtonClass: "btn btn-io-n",
+                                cancelButtonClass: "btn btn-io-n"
                             });
                         },
                         success: function (resp) {
@@ -922,7 +923,7 @@
                                     "html": "<h4>Operazione effettuata con successo.</h4>",
                                     "type": "success",
                                     "width": '45%',
-                                    "confirmButtonClass": "btn btn-io",
+                                    "confirmButtonClass": "btn btn-io"
                                 });
                             } else {
                                 swal.fire({
@@ -940,12 +941,12 @@
 
             $('#capres').keydown(function (e) {
                 if (this.value.length > 4)
-                    if (!(e.which == '46' || e.which == '8' || e.which == '13')) // backspace/enter/del
+                    if (!(e.which === '46' || e.which === '8' || e.which === '13')) // backspace/enter/del
                         e.preventDefault();
             });
             $('#capdom').keydown(function (e) {
                 if (this.value.length > 4)
-                    if (!(e.which == '46' || e.which == '8' || e.which == '13')) // backspace/enter/del
+                    if (!(e.which === '46' || e.which === '8' || e.which === '13')) // backspace/enter/del
                         e.preventDefault();
             });
 
@@ -983,7 +984,7 @@
                     msg += err ? ", Giorno di nascita" : "Giorno di nascita";
                     checkdata = true;
                 }
-                if (data.val().substring(8) != cf.val().substring(6, 8)) {
+                if (data.val().substring(8) !== cf.val().substring(6, 8)) {
                     msg += err ? ", Anno di nascita" : "Anno di nascita";
                     checkdata = true;
                 }
@@ -997,8 +998,8 @@
                 $('#regionenascita_div').removeClass("is-valid-select").removeClass("is-invalid-select");
                 $('#provincianascita_div').removeClass("is-valid-select").removeClass("is-invalid-select");
                 $('#comunenascita_div').removeClass("is-valid-select").removeClass("is-invalid-select");
-                if (stato.val() == "000" || stato.val() === "99" || stato.val() === "-") {
-                    if ($('#comunenascita').val() != null && $('#comunenascita').val() != "-") {
+                if (stato.val() === "000" || stato.val() === "99" || stato.val() === "-") {
+                    if ($('#comunenascita').val() !== null && $('#comunenascita').val() !== "-") {
                         $.ajax({
                             type: "GET",
                             async: false,
@@ -1021,7 +1022,7 @@
                         err = true;
                     }
                 } else {
-                    if (stato.val() != cf.val().substring(11, 15).toUpperCase()) {
+                    if (stato.val() !== cf.val().substring(11, 15).toUpperCase()) {
                         msg += err ? ", Stato di nascita" : "Stato di nascita";
                         $('#stato_div').removeClass("is-valid-select").addClass("is-invalid-select");
                         err = true;
@@ -1039,6 +1040,16 @@
                     $("#msgrow").css("display", "");
                 }
                 return err;
+            }
+
+            function checkdipendente() {
+                if ($('#partecipazione').val() === "03") {
+                    $('#dipendente').addClass("obbligatory");
+                    $('#dipendente_div').css("display", "");
+                } else {
+                    $('#dipendente').removeClass("obbligatory");
+                    $('#dipendente_div').css("display", "none");
+                }
             }
 
         </script>

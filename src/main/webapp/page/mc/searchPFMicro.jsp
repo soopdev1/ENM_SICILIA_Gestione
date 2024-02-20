@@ -265,7 +265,9 @@
                                         <th class="text-uppercase text-center">Cognome</th>
                                         <th class="text-uppercase text-center">Codice Fiscale</th>
                                         <th class="text-uppercase text-center">Stato</th>
+                                        <th class="text-uppercase text-center">Motivazione</th>
                                         <th class="text-uppercase text-center">Ore convalidate</th>
+                                        <th class="text-uppercase text-center">Documento d'Identità</th>
                                     </tr>
                                 </thead>
                             </table>

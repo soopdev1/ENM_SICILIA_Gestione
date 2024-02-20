@@ -68,7 +68,7 @@ function setRangeDatesDay(giornoLezione, lezione, gruppo, daytoadd) {
 
 function changeLezione(idlezione, l, grp) {
     let lez = mapLezioni.get(idlezione + '_' + grp);
-    let days = setRangeDatesDay(new Date(lez.giorno), l, grp, 0);
+    let days = setRangeDatesDay(new Date(lez.giorno), l, grp, 1);
     swal.fire({
         title: 'Visualizza/Modifica Lezione ' + l + ' - Gruppo ' + grp + '<br>(Unità didattica ' + lez.codice_ud + ')',
         html: getHtml("swalLezioneCalendarioSingle", context),
@@ -366,13 +366,7 @@ function changeLezioneDouble(idlezione1, idlezione2, l, grp) {
 
 function uploadLezione(idprogetto, idm, idl, grp, ud, sedefisica) {
     let t = mapCalendario.get(idl);
-    let days = setRangeDatesDay(null, idl, grp);
-
-    if (ud.endsWith('4B') || ud.endsWith('5B')) {
-        days = setRangeDatesDay(null, idl, grp, 0);
-    } else {
-        days = setRangeDatesDay(null, idl, grp, 1);
-    }
+    let days = setRangeDatesDay(null, idl, grp, 1);
 
     let orario_default_start = '9:00';
     let orario_default_end = sumHHMM(orario_default_start, doubletoHHmm(t.ore1 + t.ore2));
@@ -418,29 +412,12 @@ function uploadLezione(idprogetto, idm, idl, grp, ud, sedefisica) {
                 daysOfWeekDisabled: [0]
             });
 
-            if (ud.endsWith("B")) {
-
-                if (typeof (mapLezioni.get(idl - 1)) !== 'undefined') {
-                    var lez_prima = mapLezioni.get(idl - 1);
-                    var fineproposta = sumHHMM(lez_prima.orafine, doubletoHHmm(t.ore1 + t.ore2));
-                    $('#orario1_start').val(lez_prima.orafine);
-                    $('#orario1_end').val(fineproposta);
-                    $('#orario1_start').timepicker("setTime", lez_prima.orafine);
-                    $('#orario1_end').timepicker("setTime", fineproposta);
-
-                } else {
-                    $('#orario1_start').val(orario_default_start);
-                    $('#orario1_end').val(orario_default_end);
-                    $('#orario1_start').timepicker("setTime", orario_default_start);
-                    $('#orario1_end').timepicker("setTime", orario_default_end);
-                }
-            } else {
+            
                 $('#orario1_start').val(orario_default_start);
                 $('#orario1_end').val(orario_default_end);
                 $('#orario1_start').timepicker("setTime", orario_default_start);
                 $('#orario1_end').timepicker("setTime", orario_default_end);
-            }
-
+            
 
             $('#giorno').val(formattedDate(days[2]));
             $("#giorno").datepicker("update");
@@ -489,27 +466,11 @@ function uploadLezione(idprogetto, idm, idl, grp, ud, sedefisica) {
                     $("#sedefisica").append('<option selected value="' + json.id + '">' + json.denominazione + " : " + json.indirizzo + " - " + json.comune.nome + '</option>');
                 });
             }
-            if (ud.endsWith("B")) {
-                if (typeof (mapLezioni.get(idl - 1)) !== 'undefined') {
-                    var lez_prima = mapLezioni.get(idl - 1);
-                    if (lez_prima.tipolez === "P") {
-                        $("#tipolez").append('<option value="P" selected>IN PRESENZA</option>');
-
-                    } else {
-                        $("#tipolez").append('<option value="F" selected>IN FAD</option>');
-
-                    }
-                } else {
-                    $("#tipolez").append('<option value="F">IN FAD</option>');
-                    $("#tipolez").append('<option value="P">IN PRESENZA</option>');
-
-                }
-            } else {
+            
                 $("#tipolez").append('<option value="F">IN FAD</option>');
                 $("#tipolez").append('<option value="P">IN PRESENZA</option>');
 
-            }
-
+            
 
             if ($('#tipolez').val() === "P") {
                 $('#sedefisica_label').css("display", "");
@@ -957,9 +918,6 @@ function showLezioneSingle(idlezione, l, grp, ud, sedefisica) {
         },
         onOpen: function () {
             
-            
-            
-            
             $("#alertmsg_day").html("La modifica è disabilitata in quanto la data della lezione è antecedente ad oggi.");
             $("#warning_day").show();
             $("#tot_hh1").html('Totale ore di lezione da effettuare : <b>' + lez.lezione_calendario.ore + '</b>');
@@ -969,6 +927,11 @@ function showLezioneSingle(idlezione, l, grp, ud, sedefisica) {
             $('#orario1_end').val(lez.orafine);
             $('#giorno').val(formattedDate(new Date(lez.giorno)));
             $('#docente').val(lez.docente.nome + " " + lez.docente.cognome);
+            
+            
+            
+            
+            
         }
     });
 }

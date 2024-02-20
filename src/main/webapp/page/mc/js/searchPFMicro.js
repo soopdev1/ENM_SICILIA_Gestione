@@ -58,7 +58,6 @@ var KTDatatablesDataSourceAjaxServer = function () {
                     className: 'text-center',
                     orderable: false,
                     render: function (data, type, row, meta) {
-
                         var option = '<div class="dropdown position-static">'
                                 + '<button type="button" class="btn btn-icon btn-sm btn-icon-md btn-circle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
                                 + '   <i class="flaticon-more-1"></i>'
@@ -66,7 +65,7 @@ var KTDatatablesDataSourceAjaxServer = function () {
                                 + '<div class="dropdown-menu dropdown-menu-left">';
                         if (typeuser === "2") {
                             option += '<a class="dropdown-item" href="javascript:void(0);" onclick="assegna(' + row.id + ')"><i class="fa fa-user"></i> Assegnazione</a>';
-                            option += '<a class="dropdown-item" href="javascript:void(0);" onclick="uploadDocGenerico(' 
+                            option += '<a class="dropdown-item" href="javascript:void(0);" onclick="uploadDocGenerico('
                                     + row.id + ')"><i class="fa fa-upload" style="margin-top:-2px"></i>Carica Altra Documentazione</a>';
                             //option += '<a class="dropdown-item" href="javascript:void(0);" onclick="uploadDocANPAL(' 
                             //+ row.id + ')"><i class="fa fa-upload" style="margin-top:-2px"></i>Carica PDF Allievi (ANPAL)</a>';
@@ -251,6 +250,8 @@ var DatatablesAllievi = function () {
                 {data: 'cognome'},
                 {data: 'codicefiscale'},
                 {data: 'statopartecipazione.descrizione'},
+                {data: 'esclusione_prg'},
+                {defaultContent: ''},
                 {defaultContent: ''}
             ],
             drawCallback: function () {
@@ -271,16 +272,16 @@ var DatatablesAllievi = function () {
                         option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalPresenzeAllievo(' + row.id + ');"><i class="fa fa-calendar-alt"></i> Visualizza Presenze</a>';
 
 //                        if (row.statopartecipazione.id === "15") {
-                            option += '<a class="dropdown-item " href="javascript:void(0);" onclick="swalSigma(' + row.id + ',\'' + row.statopartecipazione.id +
-                                    '\')"><i class="fa fa-user-check" data-container="body" data-html="true" data-toggle="kt-tooltip" title="Stato '
-                                    + row.statopartecipazione.descrizione + '"></i>Cambia stato di partecipazione</a>';
-  //                      }
+                        option += '<a class="dropdown-item " href="javascript:void(0);" onclick="swalSigma(' + row.id + ',\'' + row.statopartecipazione.id +
+                                '\')"><i class="fa fa-user-check" data-container="body" data-html="true" data-toggle="kt-tooltip" title="Stato '
+                                + row.statopartecipazione.descrizione + '"></i>Cambia stato di partecipazione</a>';
+                        //                      }
 
                         option += '</div></div>';
                         return option;
                     }
                 }, {
-                    targets: 5,
+                    targets: 6,
                     className: 'text-center',
                     orderable: false,
                     render: function (data, type, row, meta) {
@@ -289,6 +290,23 @@ var DatatablesAllievi = function () {
                         } else {
                             return row.importo;
                         }
+                    }
+                },
+                {
+                    targets: 7,
+                    className: 'text-center',
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        var option = '<a href="' + context + '/OperazioniGeneral?type=showDoc&path=' + row.docid + '" class="btn btn-io fa fa-address-card fancyDocument" style="font-size: 20px;"'
+                                + 'data-container="body" data-html="true" data-toggle="kt-tooltip"'
+                                + 'data-placement="top" title="<h6>Scadenza:</h6><h5>' + formattedDate(new Date(row.scadenzadocid)) + '</h5>"></a>';
+                        if (new Date(row.scadenzadocid) <= new Date()) {
+                            option = '<a href="' + context + '/OperazioniGeneral?type=showDoc&path=' + row.docid + '" class="btn btn-io-n fancyDocument" style="font-size: 20px"'
+                                    + 'data-container="body" data-html="true" data-toggle="kt-tooltip"'
+                                    + 'data-placement="top" title="<h6>Scadenza:</h6><h5>'
+                                    + formattedDate(new Date(row.scadenzadocid)) + '</h5>">&nbsp;<i class="fa fa-exclamation-triangle"></i></a>';
+                        }
+                        return option;
                     }
                 }]
         });

@@ -20,7 +20,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name="cpi")
 @NamedQueries(value = {
-    @NamedQuery(name = "cpi.Elenco", query = "select cpi from CPI cpi ORDER BY cpi.id")
+    @NamedQuery(name = "cpi.Elenco", query = "select cpi from CPI cpi ORDER BY cpi.descrizione")
 })
 public class CPI implements Serializable {
     

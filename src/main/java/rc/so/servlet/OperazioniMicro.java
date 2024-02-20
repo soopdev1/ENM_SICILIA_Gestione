@@ -8,8 +8,6 @@ package rc.so.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.gson.JsonObject;
-import rc.so.db.Action;
-import static rc.so.db.Action.insertTR;
 import rc.so.db.Database;
 import rc.so.db.Entity;
 import rc.so.db.FileDownload;
@@ -68,17 +66,13 @@ import javax.servlet.http.Part;
 import rc.so.util.Utility;
 import static rc.so.util.Utility.checkPDF;
 import static rc.so.util.Utility.createDir;
-import static rc.so.util.Utility.estraiEccezione;
-import static rc.so.util.Utility.getRequestValue;
 import static rc.so.util.Utility.getstatoannullato;
 import static rc.so.util.Utility.patternITA;
 import static rc.so.util.Utility.patternSql;
-import static rc.so.util.Utility.redirect;
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import static java.lang.String.format;
-import static java.nio.file.Files.probeContentType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -404,13 +398,11 @@ public class OperazioniMicro extends HttpServlet {
                         temp.setEsclusione_prg(jsonobject.getString("motivo"));
                         
                         //RESETTO GLI ALLIEVI - IMPOSTAZIONE AD ASSEGNATO SE
-                        temp.setStatopartecipazione((StatoPartecipazione) e.getEm().find(StatoPartecipazione.class, "12"));
+                        temp.setStatopartecipazione((StatoPartecipazione) e.getEm().find(StatoPartecipazione.class, "11"));
                         //ANNULLO TUTTI I DOCUMENTI TRANNE IL MODELLO 0
                         temp.getDocumenti().forEach(doc1 -> {
-                            if (!doc1.getTipo().getId().equals(30L)) {
                                 doc1.setDeleted(1);
                                 e.merge(doc1);
-                            }
                         });
                         e.merge(temp);
                     }

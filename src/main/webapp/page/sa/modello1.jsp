@@ -1,7 +1,7 @@
 <%-- 
     Document   : profile
     Created on : 18-set-2019, 12.31.26
-    Author     : agodino
+    Author     : rcosco
 --%>
 <%@page import="rc.so.util.Utility"%>
 <%@page import="rc.so.domain.Nazioni_rc"%>
@@ -184,14 +184,7 @@
                                                                         <input class="form-control obbligatory text-uppercase" type="text" name="codicefiscale" id="codicefiscale" />
                                                                     </div>
                                                                     <div class="form-group col-xl-3 col-lg-6">
-                                                                        <label>Stato di nascita <i class="fa fa-info-circle" 
-                                                                                                   data-container="body" 
-                                                                                                   data-toggle="kt-popover" 
-                                                                                                   data-placement="bottom"
-                                                                                                   data-original-title="Stato di Nascita"
-                                                                                                   data-content="Possono partecipare al programma Garanzia giovani, i cittadini Italiani, 
-                                                                                                   i cittadini di uno stato membro dell'Unione Europea oppure stranieri extra UE, purché con permesso di soggiorno o residenza in Italia.
-                                                                                                   In mancanza, del requisito della residenza o del permesso di soggiorno l'iscrizione al percorso YES I START UP non &#232; valida."></i>
+                                                                        <label>Stato di nascita 
                                                                         </label>
                                                                         <label class="kt-font-danger kt-font-boldest">*</label> 
 
@@ -215,7 +208,8 @@
                                                                 <div class="form-row">
                                                                     <div class="form-group col-xl-3 col-lg-6">
                                                                         <label>Data di nascita </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                        <input type="text" class="form-control obbligatory date-picker_r" name="datanascita" id="datanascita"/>
+                                                                        <input type="text" class="form-control obbligatory date-picker_r"
+                                                                               name="datanascita" id="datanascita"/>
                                                                     </div>
                                                                     <div class="form-group col-xl-3 col-lg-6">
                                                                         <label>Regione di nascita </label><label class="kt-font-danger kt-font-boldest">*</label>
@@ -286,24 +280,14 @@
                                                                         </div>
                                                                     </div>
                                                                 </div>  
-                                                                <h5>Residenza <i class="fa fa-info-circle" 
-                                                                                 data-container="body" 
-                                                                                 data-toggle="kt-popover" 
-                                                                                 data-placement="bottom"
-                                                                                 data-original-title="Residenza"
-                                                                                 data-content="Possono partecipare al programma Garanzia giovani, i cittadini Italiani, 
-                                                                                 i cittadini di uno stato membro dell'Unione Europea oppure stranieri extra UE, purché con permesso di soggiorno o residenza in Italia.
-                                                                                 In mancanza, del requisito della residenza o del permesso di soggiorno l'iscrizione al percorso YES I START UP non &#232; valida."></i></h5>
+                                                                <h5>Residenza</h5>
                                                                 <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
                                                                 <div class="form-row">
-                                                                    <div class="form-group col-xl-4 col-lg-6">
+                                                                    <div class="form-group col-xl-6 col-lg-6">
                                                                         <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control obbligatory text-uppercase" id="indirizzores" name="indirizzores" />
                                                                     </div>
-                                                                    <div class="form-group col-xl-2 col-lg-6">
-                                                                        <label>Civico </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                        <input type="text" class="form-control obbligatory text-uppercase" id="civicores" name="civicores" />
-                                                                    </div>
+                                                                    <input type="hidden" class="form-control text-uppercase" id="civicores" name="civicores" value="" />
                                                                     <div class="form-group col-xl-2 col-lg-6">
                                                                         <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control obbligatory text-uppercase" id="capres" name="capres"  onkeypress="return isNumber(event);"/>
@@ -352,14 +336,11 @@
                                                                 <h5>Domicilio <label class="kt-font-danger kt-font-boldest" style="display:none;" id="msgdom">Il domicilio corrisponde con la residenza</label></h5>
                                                                 <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
                                                                 <div class="form-row">
-                                                                    <div class="form-group col-xl-4 col-lg-6">
+                                                                    <div class="form-group col-xl-6 col-lg-6">
                                                                         <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control text-uppercase" id="indirizzodom" name="indirizzodom" />
                                                                     </div>
-                                                                    <div class="form-group col-xl-2 col-lg-6">
-                                                                        <label>Civico </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                        <input type="text" class="form-control text-uppercase" id="civicodom" name="civicodom" />
-                                                                    </div>
+                                                                    <input type="hidden" class="form-control text-uppercase" id="civicodom" name="civicodom" value="" />
                                                                     <div class="form-group col-xl-2 col-lg-6">
                                                                         <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control text-uppercase" id="capdom" name="capdom"  onkeypress="return isNumber(event);"/>
@@ -398,17 +379,24 @@
                                                                 <h5>Dati</h5> 
                                                                 <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
                                                                 <div class="form-row">
-                                                                    <div class="form-group col-xl-4 col-lg-6">
+                                                                    <div class="form-group col-xl-6 col-lg-6">
                                                                         <label>Requisito di partecipazione</label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <div class="dropdown bootstrap-select form-control kt-" id="canale_div" style="padding: 0;">
-                                                                            <select class="form-control kt-select2-general obbligatory" id="partecipazione" name="partecipazione"  style="width: 100%">
+                                                                            <select class="form-control kt-select2-general obbligatory" id="partecipazione" name="partecipazione" 
+                                                                                    style="width: 100%" onchange="checkdipendente();">
                                                                                 <option value="-">Seleziona requisito</option>
-                                                                                <option value="01">DISOCCUPATO/INOCCUPATO</option>
-                                                                                <option value="02">PERSONA IN CONDIZIONE DI DISAGIO SOCIO-ECONOMICO</option>
-                                                                                <option value="03">PERSONA DESTINATARIA DI POLITICHE PASSIVE</option>
+                                                                                <option value="01">TARGET 1 - Disoccupato/inoccupato, in possesso di DID in corso di validità</option>
+                                                                                <option value="02">TARGET 2 - Persona in condizione di disagio socio-economico, in possesso di DID in corso di validità</option>
+                                                                                <option value="03">TARGET 3 - Persona destinataria di politiche passive (CIG)</option>
                                                                             </select>
                                                                         </div>
-                                                                    </div>    
+                                                                    </div>
+                                                                    <div class="form-group col-xl-6 col-lg-6" id="dipendente_div" style="display: none;">
+                                                                        <label>Dipendente presso l'azienda </label><label class="kt-font-danger kt-font-boldest">*</label>
+                                                                        <input type="text" class="form-control text-uppercase" id="dipendente" name="dipendente" />
+                                                                    </div>
+                                                                </div>  
+                                                                <div class="form-row">
                                                                     <div class="form-group col-xl-4 col-lg-6">
                                                                         <label>Titolo di studio </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <div class="dropdown bootstrap-select form-control kt-" id="titolo_studio_div" style="padding: 0;">
@@ -432,7 +420,7 @@
                                                                             </select>
                                                                         </div>
                                                                     </div>
-                                                                                                                                    
+
                                                                 </div>  
                                                                 <input type="hidden" name="condizione" value="01" />
                                                                 <div class="form-row">
@@ -452,24 +440,8 @@
                                                                         <input type="text" class="form-control obbligatory text-lowercase" id="email" name="email"  />
                                                                     </div>
                                                                     <input type="hidden" value="2024-01-01" name="iscrizionegg" id="iscrizionegg" />
-                                                                    <div class="form-group col-xl-4 col-lg-6">
-                                                                        <label>Operatore Privato / CPI </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                        <div class="dropdown bootstrap-select form-control kt-" id="cpi_div" style="padding: 0;">
-                                                                            <select class="form-control kt-select2-general obbligatory" id="cpi" name="cpi"  style="width: 100%">
-                                                                                <option value="-">Seleziona</option>
-                                                                                <%for (CPI c : cpi) {%>
-                                                                                <option value="<%=c.getId()%>"><%=c.getDescrizione()%></option>
-                                                                                <%}%>
-                                                                            </select>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-group col-xl-2 col-lg-6">
-                                                                        <label>Data presa in carico </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                        <input type="text" class="form-control obbligatory date-picker_r" name="datacpi" id="datacpi" />
-                                                                    </div>
-                                                                </div>
-                                                                <div class="form-row">   
+                                                                    <input type="hidden" value="2024-01-01" name="datacpi" id="datacpi" />
+                                                                    <input type="hidden" value="A0000000000" name="cpi" id="cpi" />
                                                                     <div class="form-group col-xl-4 col-lg-6">
                                                                         <label>Motivazione </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <div class="dropdown bootstrap-select form-control kt-" id="motivazione_div" style="padding: 0;">

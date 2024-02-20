@@ -41,9 +41,7 @@ var KTDatatablesDataSourceAjaxServer = function () {
                 {data: 'end'},
                 {defaultContent: ''},
                 {data: 'cip'},
-                {data: 'stato.descrizione', className: 'text-center text-uppercase'},
-                {data: 'motivo', className: 'text-center text-uppercase'},
-                {data: 'stato.de_tipo', className: 'text-center text-uppercase'}
+                {data: 'stato.descrizione', className: 'text-center text-uppercase'}
             ],
             drawCallback: function () {
                 $('[data-toggle="kt-tooltip"]').tooltip();
@@ -88,7 +86,7 @@ var KTDatatablesDataSourceAjaxServer = function () {
                             if (row.stato.id === "P" || row.stato.id === "SOA" || row.stato.id === "SOB") {
                                 option += '<a class="dropdown-item fancyBoxReload" href="newStaff.jsp?id=' + row.id + '"><i class="flaticon-users-1"></i> Inserisci membri Staff</a>';
                             }
-                            if ((row.stato.id === "P" || row.stato.id === "DCE" || row.stato.id === "SOA") && row.modello2_check === 0) {
+                            if (row.stato.id === "P" || row.stato.id === "DCE" || row.stato.id === "SOA") {
                                 //modello 3 con invio a MC
                                 option += '<a class="dropdown-item fancyBoxFullReload" href="modello3.jsp?id=' + row.id + '"><i class="fa fa-calendar-check"></i> Carica Modello 3 e Conferma</a>';
                             } else if (row.stato.id === "ATA") {
@@ -204,7 +202,8 @@ var DatatablesAllievi = function () {
                 {data: 'cognome'},
                 {data: 'codicefiscale'},
                 {data: 'statopartecipazione.descrizione'},
-                {data: 'esclusione_prg'}
+                {data: 'esclusione_prg'},
+                {defaultContent: ''}
             ],
             drawCallback: function () {
                 $('[data-toggle="kt-tooltip"]').tooltip();
@@ -223,6 +222,23 @@ var DatatablesAllievi = function () {
                                 + '<div class="dropdown-menu dropdown-menu-left">';
                         option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalDocumentAllievo(' + row.id + ')"><i class="fa fa-file-alt"></i> Visualizza Documenti</a>';
                         option += '</div></div>';
+                        return option;
+                    }
+                },
+                {
+                    targets: 6,
+                    className: 'text-center',
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        var option = '<a href="' + context + '/OperazioniGeneral?type=showDoc&path=' + row.docid + '" class="btn btn-io fa fa-address-card fancyDocument" style="font-size: 20px;"'
+                                + 'data-container="body" data-html="true" data-toggle="kt-tooltip"'
+                                + 'data-placement="top" title="<h6>Scadenza:</h6><h5>' + formattedDate(new Date(row.scadenzadocid)) + '</h5>"></a>';
+                        if (new Date(row.scadenzadocid) <= new Date()) {
+                            option = '<a href="' + context + '/OperazioniGeneral?type=showDoc&path=' + row.docid + '" class="btn btn-io-n fancyDocument" style="font-size: 20px"'
+                                    + 'data-container="body" data-html="true" data-toggle="kt-tooltip"'
+                                    + 'data-placement="top" title="<h6>Scadenza:</h6><h5>'
+                                    + formattedDate(new Date(row.scadenzadocid)) + '</h5>">&nbsp;<i class="fa fa-exclamation-triangle"></i></a>';
+                        }
                         return option;
                     }
                 }]

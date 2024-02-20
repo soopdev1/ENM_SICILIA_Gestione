@@ -157,7 +157,7 @@ public class Pdf_new {
 
             List<Nazioni_rc> nascitaconCF = e.listaNazioni_rc();
 
-            TipoDoc_Allievi p = e.getEm().find(TipoDoc_Allievi.class, Long.parseLong(idmodello));
+            TipoDoc_Allievi p = e.getEm().find(TipoDoc_Allievi.class, Long.valueOf(idmodello));
             String contentb64 = p.getModello();
             String pathtemp = e.getPath("pathtemp");
             createDir(pathtemp);
@@ -175,10 +175,6 @@ public class Pdf_new {
 
                 setFieldsValue(form, fields, "NOMESA", NOMESA);
                 setFieldsValue(form, fields, "DD", DD);
-                setFieldsValue(form, fields, "REGIONESEDE", "");
-                setFieldsValue(form, fields, "COMUNESEDE", "");
-                setFieldsValue(form, fields, "PROVINCIASEDE", "");
-                setFieldsValue(form, fields, "INDIRIZZOSEDE", "");
                 setFieldsValue(form, fields, "cognome", al.getCognome().toUpperCase());
                 setFieldsValue(form, fields, "nome", al.getNome().toUpperCase());
                 setFieldsValue(form, fields, "datanascita", sdfITA.format(al.getDatanascita()));
@@ -194,6 +190,7 @@ public class Pdf_new {
                 setFieldsValue(form, fields, "comune_residenza", al.getComune_residenza().getNome().toUpperCase());
                 setFieldsValue(form, fields, "cap_residenza", al.getCapresidenza());
                 setFieldsValue(form, fields, "provincia_residenza", al.getComune_residenza().getCod_provincia().toUpperCase());
+                setFieldsValue(form, fields, "regione_residenza", al.getComune_residenza().getRegione().toUpperCase());
                 
                 if (!domiciliouguale) {
                     setFieldsValue(form, fields, "indirizzodomicilio", al.getIndirizzodomicilio().toUpperCase());
@@ -201,40 +198,29 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "comune_domicilio", al.getComune_domicilio().getNome().toUpperCase());
                     setFieldsValue(form, fields, "cap_domicilio", al.getCapdomicilio());
                     setFieldsValue(form, fields, "provincia_domicilio", al.getComune_domicilio().getCod_provincia().toUpperCase());
+                    setFieldsValue(form, fields, "regione_domicilio", al.getComune_domicilio().getRegione().toUpperCase());
                 } else {
                     setFieldsValue(form, fields, "indirizzodomicilio", "");
                     setFieldsValue(form, fields, "civicodomicilio", "");
                     setFieldsValue(form, fields, "comune_domicilio", "");
                     setFieldsValue(form, fields, "cap_domicilio", "");
                     setFieldsValue(form, fields, "provincia_domicilio", "");
+                    setFieldsValue(form, fields, "regione_domicilio", "");
                 }
-
-                setFieldsValue(form, fields, "cittadinanza", al.getCittadinanza().getNome().toUpperCase());
-                setFieldsValue(form, fields, "iscrizionegg", sdfITA.format(al.getIscrizionegg()));
-                setFieldsValue(form, fields, "datacpi", sdfITA.format(al.getDatacpi()));
-
-                //MODIFICA APL
-                if (al.getCpi().getId().equals("A0000000000")) {
-                    setFieldsValue(form, fields, "APLSI", "On");
-                    setFieldsValue(form, fields, "CPI", "");
-                    setFieldsValue(form, fields, "provincia_cpi", "");
-                } else {
-                    setFieldsValue(form, fields, "APLNO", "On");
-                    setFieldsValue(form, fields, "CPI", al.getCpi().getDescrizione());
-                    setFieldsValue(form, fields, "provincia_cpi", al.getCpi().getProvincia());
-                }
-
+                
                 setFieldsValue(form, fields, "SESSO" + al.getSesso(), "On");
+                setFieldsValue(form, fields, "cittadinanza", al.getCittadinanza().getNome().toUpperCase());
+                setFieldsValue(form, fields, "CPI", al.getCpi().getDescrizione());
+                setFieldsValue(form, fields, "datacpi", sdfITA.format(al.getDatacpi()));
+                setFieldsValue(form, fields, "partecipazione" + al.getPartecipazione(), "On");
                 setFieldsValue(form, fields, "titolo_studio" + al.getTitoloStudio().getCodice(), "On");
                 setFieldsValue(form, fields, "condizione_lavorativa" + al.getCondizione_lavorativa().getId(), "On");
                 setFieldsValue(form, fields, "idcanale" + al.getCanale().getId(), "On");
                 setFieldsValue(form, fields, "motivazione" + al.getMotivazione().getId(), "On");
-
                 setFieldsValue(form, fields, "privacy1SI", "On");
                 setFieldsValue(form, fields, "privacy2" + al.getPrivacy2(), "On");
                 setFieldsValue(form, fields, "privacy3" + al.getPrivacy3(), "On");
                 setFieldsValue(form, fields, "data", dataconsegna.toString(patternITA));
-
                 if (flatten) {
                     form.flattenFields();
                     form.flush();
@@ -618,6 +604,7 @@ public class Pdf_new {
                 if (i0 != null) {
                     setFieldsValue(form, fields, "inquadramento", i0.getDescrizione().toUpperCase());
                 }
+                
                 setFieldsValue(form, fields, "fascia", d.getFascia().getDescrizione());
 
                 AtomicInteger indice = new AtomicInteger(1);
@@ -2232,7 +2219,7 @@ public class Pdf_new {
 
         try {
 
-            TipoDoc p = e.getEm().find(TipoDoc.class, Long.parseLong(idmodello));
+            TipoDoc p = e.getEm().find(TipoDoc.class, Long.valueOf(idmodello));
             String contentb64 = p.getModello();
             String pathtemp = e.getPath("pathtemp");
             createDir(pathtemp);

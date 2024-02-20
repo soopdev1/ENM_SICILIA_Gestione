@@ -179,8 +179,6 @@
                                                         <th class="text-uppercase text-center">CIP</th>
                                                         <th class="text-uppercase text-center">Allievi</th>
                                                         <th class="text-uppercase text-center">Stato</th>
-                                                        <th class="text-uppercase text-center">Motivo Errore</th>
-                                                        <th class="text-uppercase text-center">Errore O Verificare</th>
                                                     </tr>
                                                 </thead>
                                             </table>  
@@ -217,6 +215,7 @@
                                         <th class="text-uppercase text-center">Codice Fiscale</th>
                                         <th class="text-uppercase text-center">Stato</th>
                                         <th class="text-uppercase text-center">Motivazione</th>
+                                        <th class="text-uppercase text-center">Documento d'Identità</th>
                                     </tr>
                                 </thead>
                             </table>

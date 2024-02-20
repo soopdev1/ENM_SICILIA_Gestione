@@ -457,22 +457,21 @@ public class QueryMicro extends HttpServlet {
                             FUTURE.setConvalidata(false);
                             FUTURE.setTipolez("IN FAD");
                             FUTURE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
-
                             presenze_t.add(FUTURE);
                         } else {
                             Presenze_Lezioni_Allievi pla = presenze_fad.stream().filter(p1 -> p1.getDatalezione().equals(temp.getGiorno())).findAny().orElse(null);
                             if (pla == null) {
-                                Presenze_Lezioni_Allievi NONINSERITA = new Presenze_Lezioni_Allievi();
-                                NONINSERITA.setDatalezione(temp.getGiorno());
-                                NONINSERITA.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
-                                NONINSERITA.setOrainizio(temp.getOrainizio());
-                                NONINSERITA.setOrafine(temp.getOrafine());
-                                NONINSERITA.setDurata(-10000L);
-                                NONINSERITA.setDurataconvalidata(-10000L);
-                                NONINSERITA.setConvalidata(false);
-                                NONINSERITA.setTipolez("IN FAD");
-                                NONINSERITA.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
-                                presenze_t.add(NONINSERITA);
+                                Presenze_Lezioni_Allievi ASSENTE = new Presenze_Lezioni_Allievi();
+                                ASSENTE.setDatalezione(temp.getGiorno());
+                                ASSENTE.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
+                                ASSENTE.setOrainizio(temp.getOrainizio());
+                                ASSENTE.setOrafine(temp.getOrafine());
+                                ASSENTE.setDurata(0L);
+                                ASSENTE.setDurataconvalidata(0L);
+                                ASSENTE.setConvalidata(false);
+                                ASSENTE.setTipolez("IN FAD");
+                                ASSENTE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                                presenze_t.add(ASSENTE);
                             } else {
                                 pla.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
                                 pla.setTipolez("IN FAD");
@@ -481,7 +480,7 @@ public class QueryMicro extends HttpServlet {
                             }
                         }
                         fadgiàinserite.add(temp.getGiorno());
-                        System.out.println("rc.so.servlet.QueryMicro.getPresenzeAllievo() " + temp.getGiorno());
+//                        System.out.println("rc.so.servlet.QueryMicro.getPresenzeAllievo() " + temp.getGiorno());
                     }
                 }
             }

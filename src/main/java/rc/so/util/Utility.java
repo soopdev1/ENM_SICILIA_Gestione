@@ -26,8 +26,6 @@ import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.properties.TextAlignment;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import rc.so.db.Action;
 import static rc.so.db.Action.insertTR;
 import rc.so.db.Database;
@@ -116,9 +114,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.sax.ToTextContentHandler;
+import org.apache.tika.parser.txt.CharsetDetector;
 import org.joda.time.DateTimeComparator;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
@@ -1042,13 +1038,9 @@ public class Utility {
 
     public static String conversionText(String ing) {
         try {
-
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ToTextContentHandler toTextContentHandler = new ToTextContentHandler(byteArrayOutputStream, "UTF-8");
-            AutoDetectParser parser = new AutoDetectParser();
-            Metadata metadata = new Metadata();
-            parser.parse(new ByteArrayInputStream(ing.getBytes()), toTextContentHandler, metadata);
-            return byteArrayOutputStream.toString().trim();
+            CharsetDetector detector = new CharsetDetector();
+            detector.setText(ing.getBytes());
+            return new String(ing.getBytes(detector.detect().getName()), Charset.forName("utf-8"));
         } catch (Exception ex) {
             insertTR("E", "SERVICE", estraiEccezione(ex));
         }
@@ -1056,17 +1048,12 @@ public class Utility {
     }
 
     public static String getstatoannullato(String stato_prec) {
-        switch (stato_prec) {
-            case "ATA":
-            case "ATB":
-                return stato_prec + "E";
-            case "SOA":
-                return "ATAE";
-            case "SOB":
-                return "ATBE";
-            default:
-                return "DVBE";
-        }
+        return switch (stato_prec) {
+            case "ATA", "ATB" -> stato_prec + "E";
+            case "SOA" -> "ATAE";
+            case "SOB" -> "ATBE";
+            default -> "DVBE";
+        };
     }
 
     public static DateTime format(String ing, String pattern) {

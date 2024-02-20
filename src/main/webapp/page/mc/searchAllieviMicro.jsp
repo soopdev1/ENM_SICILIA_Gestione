@@ -22,7 +22,6 @@
                 idsa = Long.parseLong(request.getParameter("idsa"));
             }
             Entity e = new Entity();
-            List<CPI> cpi = e.listaCPI();
             List<SoggettiAttuatori> sa_list = e.findAll(SoggettiAttuatori.class);
             e.close();
             String src = session.getAttribute("src").toString();
@@ -133,8 +132,8 @@
                                                                 <input class="form-control" name="cf" id="cf" autocomplete="off">
                                                             </div>
                                                         </div>
-                                                                    <input type="hidden" name="cpi" value="-" />
-                                                        
+                                                        <input type="hidden" name="cpi" value="-" />
+
                                                     </div>
                                                     <div class="kt-portlet__foot">
                                                         <div class="kt-form__actions">
@@ -182,6 +181,7 @@
                                                         <th class="text-uppercase text-center">Soggetto Attuatore</th>
                                                         <th class="text-uppercase text-center">Assegnato a Operatore ENM</th>
                                                         <th class="text-uppercase text-center">Stato di partecipazione</th>
+                                                        <th class="text-uppercase text-center">Documento d'Identità</th>
                                                     </tr>
                                                 </thead>
                                             </table>  
@@ -294,7 +294,8 @@
                             {data: 'indirizzoresidenza'},
                             {defaultContent: ''},
                             {data: 'tos_operatore', className: 'text-center'},
-                            {data: 'statopartecipazione.descrizione', className: 'text-center'}
+                            {data: 'statopartecipazione.descrizione', className: 'text-center'},
+                            {defaultContent: ''}
                         ],
                         drawCallback: function () {
                             $('[data-toggle="kt-tooltip"]').tooltip();
@@ -360,15 +361,33 @@
                                             + " (" + (row.comune_residenza.provincia === null ? "N.I." : row.comune_residenza.provincia) + ")";
                                     return comune + ",<br> " + row.indirizzoresidenza;
                                 }
-                            },{
+                            }, {
                                 targets: 6,
                                 className: 'text-center',
                                 render: function (data, type, row, meta) {
-                                    if(row.soggetto === null) {
+                                    if (row.soggetto === null) {
                                         return "";
                                     } else {
                                         return row.soggetto.ragionesociale;
                                     }
+                                }
+                            },
+
+                            {
+                                targets: 9,
+                                className: 'text-center',
+                                orderable: false,
+                                render: function (data, type, row, meta) {
+                                    var option = '<a href="' + context + '/OperazioniGeneral?type=showDoc&path=' + row.docid + '" class="btn btn-io fa fa-address-card fancyDocument" style="font-size: 20px;"'
+                                            + 'data-container="body" data-html="true" data-toggle="kt-tooltip"'
+                                            + 'data-placement="top" title="<h6>Scadenza:</h6><h5>' + formattedDate(new Date(row.scadenzadocid)) + '</h5>"></a>';
+                                    if (new Date(row.scadenzadocid) <= new Date()) {
+                                        option = '<a href="' + context + '/OperazioniGeneral?type=showDoc&path=' + row.docid + '" class="btn btn-io-n fancyDocument" style="font-size: 20px"'
+                                                + 'data-container="body" data-html="true" data-toggle="kt-tooltip"'
+                                                + 'data-placement="top" title="<h6>Scadenza:</h6><h5>'
+                                                + formattedDate(new Date(row.scadenzadocid)) + '</h5>">&nbsp;<i class="fa fa-exclamation-triangle"></i></a>';
+                                    }
+                                    return option;
                                 }
                             }
                         ]
@@ -449,7 +468,7 @@
                     }
                 });
             }
-            
+
             function upDoc(id, id_tipoDoc, fdata) {
                 $.ajax({
                     type: "POST",

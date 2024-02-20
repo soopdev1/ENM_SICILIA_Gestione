@@ -220,7 +220,7 @@
                                                                 <i id="mainIcon_<%=lez.getLezione()%>" class='fa fa-file-invoice kt-font-io' style='font-size: 100px;'></i>
                                                             </a>
                                                             <%} else {%>
-                                                            <a href="javascript:void(0)" id="a_lez<%=lez.getLezione()%>" onclick="lezioniSingle(<%=lez.getId()%>, <%=lez.getLezione()%>)" 
+                                                            <a href="javascript:void(0)" id="a_lez<%=lez.getLezione()%>" onclick="lezioniSingle(<%=lez.getId()%>, <%=lez.getLezione()%>, '<%=lez.getUd1()%>', '<%=idsedefisica%>')" 
                                                                class='btn-icon kt-font-io document disablelink'>
                                                                 <i class='fa fa-file-invoice kt-font-io' style='font-size: 100px;'></i>
                                                             </a>

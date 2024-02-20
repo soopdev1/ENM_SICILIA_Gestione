@@ -462,3 +462,12 @@ $('#capdom').keydown(function (e) {
             e.preventDefault();
 });
 
+function checkdipendente() {
+    if ($('#partecipazione').val() === "03") {
+        $('#dipendente').addClass("obbligatory");
+        $('#dipendente_div').css("display", "");
+    } else {
+        $('#dipendente').removeClass("obbligatory");
+        $('#dipendente_div').css("display", "none");
+    }
+}

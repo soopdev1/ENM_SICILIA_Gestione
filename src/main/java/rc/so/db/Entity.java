@@ -297,14 +297,14 @@ public class Entity {
         q.setMaxResults(1);
         String cipbase = q.getResultList().isEmpty() ? null : q.getSingleResult().getCip();
         if (cipbase == null) {
-            return "2023ENM0001";
+            return "2024ENM0001_S";
         } else {
-            String id = cipbase.replaceAll("2023ENM", "").trim();
+            String id = cipbase.replaceAll("2024ENM", "").replaceAll("_S", "").trim();
             try {
                 int id_1 = Utility.parseInt(id) + 1;
-                return "2023ENM" + StringUtils.leftPad(String.valueOf(id_1), 4, "0");
+                return "2024ENM" + StringUtils.leftPad(String.valueOf(id_1), 4, "0") + "_S";
             } catch (Exception e) {
-                return "2023ENM0001";
+                return "2024ENM0001_S";
             }
         }
     }
@@ -328,15 +328,15 @@ public class Entity {
     public User getUserbyEmail(String email) {
         TypedQuery<User> q = em.createNamedQuery("user.byEmail", User.class);
         q.setParameter("email", email);
-                q.setMaxResults(1);
-                return q.getResultList().isEmpty() ? null : q.getSingleResult();
+        q.setMaxResults(1);
+        return q.getResultList().isEmpty() ? null : q.getSingleResult();
     }
 
     public User getUserbySA(SoggettiAttuatori sa) {
         TypedQuery<User> q = em.createNamedQuery("user.bySA", User.class);
         q.setParameter("sa", sa);
-                q.setMaxResults(1);
-                return q.getResultList().isEmpty() ? null : q.getSingleResult();
+        q.setMaxResults(1);
+        return q.getResultList().isEmpty() ? null : q.getSingleResult();
     }
 
     public Email getEmail(String chiave) {
@@ -408,8 +408,8 @@ public class Entity {
     public Allievi getAllievoCF(String cf) {
         TypedQuery<Allievi> q = this.em.createNamedQuery("a.byCF", Allievi.class);
         q.setParameter("codicefiscale", cf);
-                q.setMaxResults(1);
-                return q.getResultList().isEmpty() ? null : q.getSingleResult();
+        q.setMaxResults(1);
+        return q.getResultList().isEmpty() ? null : q.getSingleResult();
     }
 
     public boolean updateuserTipo(int tipo, SoggettiAttuatori sa) {
@@ -653,7 +653,7 @@ public class Entity {
     public List<ProgettiFormativi> getProgettiFormativiDocenti(Docenti d) {
         TypedQuery<ProgettiFormativi> q = em.createNamedQuery("progetti.ProgettiDocente", ProgettiFormativi.class);
         q.setParameter("docente", d);
-        return  q.getResultList();
+        return q.getResultList();
     }
 
     public List<Allievi> getAllieviProgettiFormativi(ProgettiFormativi p) {
