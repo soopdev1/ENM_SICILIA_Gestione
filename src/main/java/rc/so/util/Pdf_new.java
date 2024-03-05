@@ -137,7 +137,7 @@ public class Pdf_new {
         }
         return null;
     }
-    
+
     public static File MODELLO1(Entity e, String idmodello, String username,
             SoggettiAttuatori sa, Allievi al, DateTime dataconsegna, boolean domiciliouguale, boolean flatten) {
         File out1 = MODELLO1_BASE(e, idmodello, username, sa, al, dataconsegna, domiciliouguale, flatten);
@@ -149,7 +149,7 @@ public class Pdf_new {
         }
         return null;
     }
-    
+
     private static File MODELLO1_BASE(Entity e, String idmodello, String username,
             SoggettiAttuatori sa, Allievi al, DateTime dataconsegna, boolean domiciliouguale, boolean flatten) {
 
@@ -164,12 +164,12 @@ public class Pdf_new {
 
             File pdfOut = new File(pathtemp + username + "_" + StringUtils.deleteWhitespace(al.getCognome() + "_" + al.getNome()) + "_" + dataconsegna.toString("ddMMyyyyHHmmSSS") + ".M1.pdf");
 
-            try ( InputStream is = new ByteArrayInputStream(decodeBase64(contentb64));  PdfReader reader = new PdfReader(is);  PdfWriter writer = new PdfWriter(pdfOut);  PdfDocument pdfDoc = new PdfDocument(reader, writer)) {
+            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is); PdfWriter writer = new PdfWriter(pdfOut); PdfDocument pdfDoc = new PdfDocument(reader, writer)) {
                 PdfAcroForm form = getAcroForm(pdfDoc, true);
                 form.setGenerateAppearance(true);
-                
+
                 Map<String, PdfFormField> fields = form.getAllFormFields();
-                
+
                 String NOMESA = sa.getRagionesociale();
                 String DD = sa.getDd();
 
@@ -191,7 +191,7 @@ public class Pdf_new {
                 setFieldsValue(form, fields, "cap_residenza", al.getCapresidenza());
                 setFieldsValue(form, fields, "provincia_residenza", al.getComune_residenza().getCod_provincia().toUpperCase());
                 setFieldsValue(form, fields, "regione_residenza", al.getComune_residenza().getRegione().toUpperCase());
-                
+
                 if (!domiciliouguale) {
                     setFieldsValue(form, fields, "indirizzodomicilio", al.getIndirizzodomicilio().toUpperCase());
                     setFieldsValue(form, fields, "civicodomicilio", al.getCivicodomicilio().toUpperCase());
@@ -207,12 +207,17 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "provincia_domicilio", "");
                     setFieldsValue(form, fields, "regione_domicilio", "");
                 }
-                
+
                 setFieldsValue(form, fields, "SESSO" + al.getSesso(), "On");
                 setFieldsValue(form, fields, "cittadinanza", al.getCittadinanza().getNome().toUpperCase());
-                setFieldsValue(form, fields, "CPI", al.getCpi().getDescrizione());
-                setFieldsValue(form, fields, "datacpi", sdfITA.format(al.getDatacpi()));
                 setFieldsValue(form, fields, "partecipazione" + al.getPartecipazione(), "On");
+
+                if (al.getPartecipazione().equals("03")) {
+                    setFieldsValue(form, fields, "dipendente", al.getDipendente().toUpperCase());
+                }else{
+                    setFieldsValue(form, fields, "dipendente", "");
+                }
+
                 setFieldsValue(form, fields, "titolo_studio" + al.getTitoloStudio().getCodice(), "On");
                 setFieldsValue(form, fields, "condizione_lavorativa" + al.getCondizione_lavorativa().getId(), "On");
                 setFieldsValue(form, fields, "idcanale" + al.getCanale().getId(), "On");
@@ -253,7 +258,6 @@ public class Pdf_new {
 //        }
 //        return null;
 //    }
-
     public static File MODELLO2(Entity e, String idmodello, String username,
             SoggettiAttuatori sa, ProgettiFormativi pf, List<Allievi> allievi,
             DateTime dataconsegna, boolean flatten) {
@@ -604,7 +608,7 @@ public class Pdf_new {
                 if (i0 != null) {
                     setFieldsValue(form, fields, "inquadramento", i0.getDescrizione().toUpperCase());
                 }
-                
+
                 setFieldsValue(form, fields, "fascia", d.getFascia().getDescrizione());
 
                 AtomicInteger indice = new AtomicInteger(1);
@@ -2211,7 +2215,6 @@ public class Pdf_new {
 //        }
 //        return null;
 //    }
-
     private static File MODELLO2_BASE(Entity e, String idmodello, String username,
             SoggettiAttuatori sa, ProgettiFormativi pf, List<Allievi> allievi,
             DateTime dataconsegna, boolean flatten

@@ -536,7 +536,7 @@ public class OperazioniSA extends HttpServlet {
                         Integer.valueOf(getRequestValue(request, "canale"))));
                 a.setCondizione_mercato(e.getEm().find(Condizione_Mercato.class,
                         getRequestValue(request, "condizione")));
-                a.setDatacpi(sdf.parse(getRequestValue(request, "datacpi")));
+                a.setDatacpi(new Date());
 
                 //29-04-2020 MODIFICA - CONDIZIONE LAVORATIVA PRECEDENTE
                 a.setCondizione_lavorativa((Condizione_Lavorativa) e.getEm().find(Condizione_Lavorativa.class,
@@ -625,7 +625,7 @@ public class OperazioniSA extends HttpServlet {
                 resp.addProperty("message", "Errore: non &egrave; stato possibile aggiungere l'allievo.<br>Il seguente codice fiscale gi&agrave; presente");
             }
         } catch (Exception ex) {
-            e.insertTracking(null, "newAllievo Errore: " + ex.getMessage());
+            e.insertTracking(null, estraiEccezione(ex));
             resp.addProperty("result", false);
             resp.addProperty("message", "Errore: non &egrave; stato possibile aggiungere l'allievo.<br>Riprovare, se l'errore persiste contattare l'assistenza");
         } finally {
@@ -1678,7 +1678,7 @@ public class OperazioniSA extends HttpServlet {
                         request.getParameter("titolo_studio")));
                 a.setCpi((CPI) e.getEm().find(CPI.class,
                         request.getParameter("cpi")));
-                a.setDatacpi(sdf.parse(request.getParameter("datacpi")));
+                a.setDatacpi(new Date());
                 //29-04-2020 MODIFICA - CONDIZIONE LAVORATIVA PRECEDENTE
                 a.setCondizione_lavorativa((Condizione_Lavorativa) e.getEm().find(Condizione_Lavorativa.class,
                         parseIntR(request.getParameter("condizione_lavorativa"))));
