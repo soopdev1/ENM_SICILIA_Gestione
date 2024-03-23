@@ -676,30 +676,45 @@ function swalPresenzeAllievo(idallievo) {
                         targets: 5,
                         render: function (data, type, row, meta) {
                             if (data) {
-
                                 if (row.durataconvalidata > 10) {
                                     var st1 = Number(row.durataconvalidata / 3600000).toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "");
                                     return st1;
+                                } else if (row.durataconvalidata === -1) {
+                                    return "ASSENZA NON GIUSTIFICATA";
+                                } else if (row.durataconvalidata === 0) {
+                                    return "ASSENZA GIUSTIFICATA";
                                 } else {
-
                                     return row.durataconvalidata;
                                 }
                             } else {
                                 if (row.durata < 0) {
                                     return "";
                                 } else {
-                                    var select = "<select class='form-control kt-select2-general' name='presenzeconvalidate' style='width: 50%'>";
-                                    for (var i = 0; i < 8.5; i = i + 0.5) {
+
+                                    var idselect = "presenzeconvalidate_0_" + row.idpresenzelezioniallievi;
+                                    if (row.tipolez === "IN FAD") {
+                                        idselect = "presenzeconvalidate_1_" + row.allievo.id;
+                                    }
+                                    var select = "<select class='form-control kt-select2-general' id='" + idselect + "' name='presenzeconvalidate' style='width: 100%'>";
+                                    select += "<option value='-1'>ASSENZA NON GIUSTIFICATA</option>";
+                                    select += "<option value='0'>ASSENZA GIUSTIFICATA</option>";
+                                    for (var i = 0.5; i < 8.5; i = i + 0.5) {
                                         if (i <= row.durata / 3600000) {
                                             select += "<option value='" + i + "'>" + Number(i + "").toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "") + "</option>";
                                         }
                                     }
-                                    select + "</select>";
-                                    return "<form class='kt-form kt-form--label-right' action='OperazioniMicro' method='POST'>" +
-                                            "<input type='hidden' name='type' value='convalidapresenzeallievo'/>" +
-                                            "<input type='hidden' name='idpresenza' value='" + row.idpresenzelezioniallievi + "'/>" +
-                                            select +
-                                            "</form>";
+                                    select = select + "</select>";
+
+                                    if (row.tipolez === "IN FAD") {
+                                        var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
+                                                + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.allievo.id + ",1," + row.datalezione + ");' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
+                                        return div;
+                                    } else {
+                                        var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
+                                                + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.idpresenzelezioniallievi + ",0,0);' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
+                                        return div;
+                                    }
+
                                 }
                             }
                         }
@@ -708,6 +723,37 @@ function swalPresenzeAllievo(idallievo) {
             });
         }
     });
+}
+
+
+function validatepresenze(idpresenza, tipo, datalez) {
+    $.ajax({
+        type: "POST",
+        url: context + '/OperazioniMicro',
+        data: {
+            "type": "CONVALIDAPRESENZEALLIEVO",
+            "idpresenza": idpresenza,
+            "tipo": tipo,
+            "datalez": datalez,
+            "convalidate": $('#presenzeconvalidate_' + tipo + "_" + idpresenza).val()
+        },
+        success: function (data) {
+            closeSwal();
+            var json = JSON.parse(data);
+            if (json.result) {
+                swalSuccess("Presenze", "Presenze convalidate correttamente.");
+                reload_table($('#kt_table_presenzaallievi'));
+                reload_table($('#kt_table_allievi'));
+            } else {
+                swalError("Errore", json.message);
+            }
+        },
+        error: function () {
+            swalError("Errore", "Non è stato possibile impostare lo stato di partecipazione");
+        }
+    });
+
+
 }
 
 function swalDocumentAllievo(idallievo) {

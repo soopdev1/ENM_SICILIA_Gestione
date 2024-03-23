@@ -872,113 +872,43 @@ public class QueryMicro extends HttpServlet {
         if (us != null && (us.getTipo() == 2 || us.getTipo() == 5)) {
             String type = request.getParameter("type");
             switch (type) {
-                case "getPresenzeAllievo":
-                    getPresenzeAllievo(request, response);
-                    break;
-                case "verificaassegnazione":
-                    verificaassegnazione(request, response);
-                    break;
-                case "generatecip":
-                    generatecip(request, response);
-                    break;
-                case "searchSA":
-                    searchSA(request, response);
-                    break;
-                case "nuoviSA":
-                    searchnuoviSA(request, response);
-                    break;
-                case "searchAllievo":
-                    searchAllievo(request, response);
-                    break;
-                case "searchdaAssegnare":
-                    searchdaAssegnare(request, response);
-                    break;
-                case "searchDocenti":
-                    searchDocenti(request, response);
-                    break;
-                case "searchProgetti":
-                    searchProgetti(request, response);
-                    break;
-                case "searchProgettiDocente":
-                    searchProgettiDocente(request, response);
-                    break;
-                case "searchAllieviProgetti":
-                    searchAllieviProgetti(request, response);
-                    break;
-                case "searchMappaAllievi":
-                    searchMappaAllievi(request, response);
-                    break;
-                case "searchSedi":
-                    searchSedi(request, response);
-                    break;
-                case "getDocPrg":
-                    getDocPrg(request, response);
-                    break;
-                case "getStoryPrg":
-                    getStoryPrg(request, response);
-                    break;
-                case "getDocAllievo":
-                    getDocAllievo(request, response);
-                    break;
-                case "getDocAllievoAgg":
-                    getDocAllievoAgg(request, response);
-                    break;
-                case "searchDocentiProgetti":
-                    searchDocentiProgetti(request, response);
-                    break;
-                case "getRendicontazioni":
-                    getRendicontazioni(request, response);
-                    break;
-                case "getPec":
-                    getPec(request, response);
-                    break;
-                case "getConversationSA":
-                    getConversationSA(request, response);
-                    break;
-                case "geFaqAnswer":
-                    geFaqAnswer(request, response);
-                    break;
-                case "getTipoFaq":
-                    getTipoFaq(request, response);
-                    break;
-                case "getFaq":
-                    getFaq(request, response);
-                    break;
-                case "getMyConference":
-                    getMyConference(request, response);
-                    break;
-                case "getFAD":
-                    getFAD(request, response);
-                    break;
-                case "searchActivity":
-                    searchActivity(request, response);
-                    break;
-                case "getDocente":
-                    getDocente(request, response);
-                    break;
-                case "searchCpiUser":
-                    searchCpiUser(request, response);
-                    break;
-                case "searchUnitaDidattiche":
-                    searchUnitaDidattiche(request, response);
-                    break;
-                case "getAllieviByPrg":
-                    getAllieviByPrg(request, response);
-                    break;
-                case "getLezioniByProgetto":
-                    getLezioniByProgetto(request, response);
-                    break;
-                case "getAllieviByProgetto":
-                    getAllieviByProgetto(request, response);
-                    break;
-                case "getChecklistfinale":
-                    getChecklistfinale(request, response);
-                    break;
-                case "getSIGMA":
-                    getSIGMA(request, response);
-                    break;
-                default:
-                    break;
+                case "getPresenzeAllievo" -> getPresenzeAllievo(request, response);
+                case "verificaassegnazione" -> verificaassegnazione(request, response);
+                case "generatecip" -> generatecip(request, response);
+                case "searchSA" -> searchSA(request, response);
+                case "nuoviSA" -> searchnuoviSA(request, response);
+                case "searchAllievo" -> searchAllievo(request, response);
+                case "searchdaAssegnare" -> searchdaAssegnare(request, response);
+                case "searchDocenti" -> searchDocenti(request, response);
+                case "searchProgetti" -> searchProgetti(request, response);
+                case "searchProgettiDocente" -> searchProgettiDocente(request, response);
+                case "searchAllieviProgetti" -> searchAllieviProgetti(request, response);
+                case "searchMappaAllievi" -> searchMappaAllievi(request, response);
+                case "searchSedi" -> searchSedi(request, response);
+                case "getDocPrg" -> getDocPrg(request, response);
+                case "getStoryPrg" -> getStoryPrg(request, response);
+                case "getDocAllievo" -> getDocAllievo(request, response);
+                case "getDocAllievoAgg" -> getDocAllievoAgg(request, response);
+                case "searchDocentiProgetti" -> searchDocentiProgetti(request, response);
+                case "getRendicontazioni" -> getRendicontazioni(request, response);
+                case "getPec" -> getPec(request, response);
+                case "getConversationSA" -> getConversationSA(request, response);
+                case "geFaqAnswer" -> geFaqAnswer(request, response);
+                case "getTipoFaq" -> getTipoFaq(request, response);
+                case "getFaq" -> getFaq(request, response);
+                case "getMyConference" -> getMyConference(request, response);
+                case "getFAD" -> getFAD(request, response);
+                case "searchActivity" -> searchActivity(request, response);
+                case "getDocente" -> getDocente(request, response);
+                case "searchCpiUser" -> searchCpiUser(request, response);
+                case "searchUnitaDidattiche" -> searchUnitaDidattiche(request, response);
+                case "getAllieviByPrg" -> getAllieviByPrg(request, response);
+                case "getLezioniByProgetto" -> getLezioniByProgetto(request, response);
+                case "getAllieviByProgetto" -> getAllieviByProgetto(request, response);
+                case "getChecklistfinale" -> getChecklistfinale(request, response);
+                case "getSIGMA" -> getSIGMA(request, response);
+                default -> {
+                }
             }
         }
     }

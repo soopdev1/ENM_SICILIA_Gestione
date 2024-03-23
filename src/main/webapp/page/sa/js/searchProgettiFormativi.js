@@ -39,8 +39,8 @@ var KTDatatablesDataSourceAjaxServer = function () {
                 {data: 'id'},
                 {data: 'start'},
                 {data: 'end'},
-                {defaultContent: ''},
                 {data: 'cip'},
+                {defaultContent: ''},
                 {data: 'stato.descrizione', className: 'text-center text-uppercase'}
             ],
             drawCallback: function () {

@@ -154,12 +154,12 @@
                                                                             <div class="dropdown bootstrap-select form-control kt-" id="stato_div" style="padding: 0;">
                                                                                 <select class="form-control kt-select2-general obbligatory" id="stato" name="stato"  style="width: 100%">
                                                                                     <option value="-">Seleziona Stato nascita</option>
-                                                                                    <%for (Nazioni_rc c : nascitaconCF) {
-                                                                                            if (c.getCodicefiscale().equalsIgnoreCase(a.getStato_nascita())
-                                                                                                    || c.getIstat().equalsIgnoreCase(a.getStato_nascita())) {%>
-                                                                                    <option selected value="<%=c.getCodicefiscale()%>"><%=c.getNome()%></option>
+                                                                                    <%boolean it = a.getComune_nascita().getCittadinanza() == 0;
+                                                                                        for (Nazioni_rc c : cittadinanza) {
+                                                                                            if (c.getIstat().equals("100") && it) {%>
+                                                                                    <option selected value="<%=c.getId()%>"><%=c.getNome()%></option>
                                                                                     <%} else {%>
-                                                                                    <option value="<%=c.getCodicefiscale()%>"><%=c.getNome()%></option>
+                                                                                    <option value="<%=c.getId()%>"><%=c.getNome()%></option>
                                                                                     <%}
                                                                                         }%>
                                                                                 </select>
@@ -228,6 +228,11 @@
                                                                                 </select>
                                                                             </div>
                                                                         </div>
+                                                                        <div class="form-group col-xl-3 col-lg-6">
+                                                                            <label>Data scadenza documento</label><label class="kt-font-danger kt-font-boldest">*</label>
+                                                                            <input type="text" class="form-control obbligatory date-picker_r1" 
+                                                                                   name="scadenzadoc" id="scadenzadoc"  value="<%=sdf.format(a.getScadenzadocid())%>" />
+                                                                        </div>
                                                                     </div>
                                                                     <h5>Residenza</h5>
                                                                     <div class="kt-separator kt-separator--border kt-separator--space-xs"></div>
@@ -236,11 +241,12 @@
                                                                             <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control obbligatory" id="indirizzores" name="indirizzores" value="<%=a.getIndirizzoresidenza()%>" />
                                                                         </div>
-                                                                        <input type="hidden" class="form-control" id="civicores" name="civicores" value="<%=a.getCivicoresidenza()%>" />
                                                                         <div class="form-group col-lg-2">
                                                                             <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                             <input type="text" class="form-control obbligatory" id="capres" name="capres" value="<%=a.getCapresidenza()%>" onkeypress="return isNumber(event);"/>
                                                                         </div>
+                                                                        <input type="hidden" id="civicores" name="civicores" value="-" />
+
                                                                         <div class="form-group col-lg-4 kt-align-right">
                                                                             <label>La residenza coincide con il domicilio?</label>
                                                                             <div class="form-group kt-align-right" style="margin-bottom: 0rem;">
@@ -345,7 +351,7 @@
                                                                                     String p_v03 = a.getPartecipazione().equals("03") ? "selected" : "";
                                                                                     String display_part = a.getPartecipazione().equals("03") ? "block" : "none";
                                                                                     String dipendente = a.getPartecipazione().equals("03") ? a.getDipendente() : "";
-                                                                                    
+
                                                                                 %>
                                                                                 <select class="form-control kt-select2-general obbligatory" 
                                                                                         id="partecipazione" name="partecipazione"  style="width: 100%"  onchange="checkdipendente();">
@@ -539,7 +545,7 @@
                 }
                 $('#kt_widget5_tab1_content').addClass("active");
                 $('#tab1').addClass("active");
-            <%if (a.getIndirizzoresidenza().equalsIgnoreCase(a.getIndirizzodomicilio()) && a.getCivicoresidenza().equalsIgnoreCase(a.getCivicodomicilio()) && a.getComune_residenza().equals(a.getComune_domicilio()) && a.getCapresidenza().equals(a.getCapdomicilio())) {%>
+            <%if (a.getIndirizzoresidenza().equalsIgnoreCase(a.getIndirizzodomicilio()) && a.getComune_residenza().equals(a.getComune_domicilio())) {%>
                 $('#checkind').prop('checked', true);
                 domicilio();
             <%}%>
@@ -938,17 +944,6 @@
                 }
             }
 //            );
-
-            $('#capres').keydown(function (e) {
-                if (this.value.length > 4)
-                    if (!(e.which === '46' || e.which === '8' || e.which === '13')) // backspace/enter/del
-                        e.preventDefault();
-            });
-            $('#capdom').keydown(function (e) {
-                if (this.value.length > 4)
-                    if (!(e.which === '46' || e.which === '8' || e.which === '13')) // backspace/enter/del
-                        e.preventDefault();
-            });
 
             function checkinfoCF() {
                 var cf = $('#codicefiscale');

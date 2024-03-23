@@ -1073,6 +1073,9 @@ public class Utility {
     public static long convertHours(String ore) {
         try {
             double d1 = Double.parseDouble(ore);
+            if(d1==-1.0){
+                return -1;
+            }
             long tot = Math.round(d1) * 3600000;
             return tot;
         } catch (Exception e) {

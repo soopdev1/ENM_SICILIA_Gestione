@@ -120,13 +120,11 @@ function domicilio() {
         $('#msgdom').css("display", "none");
         $("#indirizzodom").removeAttr("disabled");
         $("#capdom").removeAttr("disabled");
-        $("#civicodom").removeAttr("disabled");
         $("#regionedom").removeAttr("disabled");
         $("#provinciadom").removeAttr("disabled");
         $("#comunedom").removeAttr("disabled");
         $("#indirizzodom").removeAttr("placeholder");
         $("#capdom").removeAttr("placeholder");
-        $("#civicodom").removeAttr("placeholder");
     } else {
         $('#msgdom').css("display", "");
         $("#indirizzodom").attr("disabled", true);
@@ -135,9 +133,6 @@ function domicilio() {
         $("#capdom").attr("placeholder", "Cap residenza");
         $("#capdom").removeClass("is-invalid");
         $("#indirizzodom").removeClass("is-invalid");
-        $("#civicodom").attr("disabled", true);
-        $("#civicodom").attr("placeholder", "Civico res.");
-        $("#civicodom").removeClass("is-invalid");
         $("#regionedom").attr("disabled", true);
         $("#provinciadom").attr("disabled", true);
         $("#comunedom").attr("disabled", true);
@@ -193,14 +188,12 @@ function ctrlForm() {
     if (!$('#checkind').is(":checked")) {
         $('#indirizzodom').addClass("obbligatory");
         $('#capdom').addClass("obbligatory");
-        $('#civicodom').addClass("obbligatory");
         $('#comunedom').addClass("obbligatory");
         $('#regionedom').addClass("obbligatory");
         $('#provinciadom').addClass("obbligatory");
     } else {
         $('#indirizzodom').removeClass("obbligatory");
         $('#capdom').removeClass("obbligatory");
-        $('#civicodom').removeClass("obbligatory");
         $('#comunedom').removeClass("obbligatory");
         $('#regionedom').removeClass("obbligatory");
         $('#provinciadom').removeClass("obbligatory");
@@ -227,14 +220,12 @@ function ctrlFormNOFILE() {
     if (!$('#checkind').is(":checked")) {
         $('#indirizzodom').addClass("obbligatory");
         $('#capdom').addClass("obbligatory");
-        $('#civicodom').addClass("obbligatory");
         $('#comunedom').addClass("obbligatory");
         $('#regionedom').addClass("obbligatory");
         $('#provinciadom').addClass("obbligatory");
     } else {
         $('#indirizzodom').removeClass("obbligatory");
         $('#capdom').removeClass("obbligatory");
-        $('#civicodom').removeClass("obbligatory");
         $('#comunedom').removeClass("obbligatory");
         $('#regionedom').removeClass("obbligatory");
         $('#provinciadom').removeClass("obbligatory");

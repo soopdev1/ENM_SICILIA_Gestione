@@ -680,7 +680,7 @@ function swalConfirm(title, HTMLmessage, func) {
         confirmButtonClass: "btn btn-io",
         customClass: {
             popup: 'large-swal animated bounceInUp',
-        },
+        }
     }).then((result) => {
         if (result.value) {
             func();

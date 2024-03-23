@@ -287,7 +287,7 @@
                                                                         <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control obbligatory text-uppercase" id="indirizzores" name="indirizzores" />
                                                                     </div>
-                                                                    <input type="hidden" class="form-control text-uppercase" id="civicores" name="civicores" value="" />
+                                                                    <input type="hidden" class="form-control text-uppercase" id="civicores" name="civicores" value="0" />
                                                                     <div class="form-group col-xl-2 col-lg-6">
                                                                         <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control obbligatory text-uppercase" id="capres" name="capres"  onkeypress="return isNumber(event);"/>
@@ -340,7 +340,7 @@
                                                                         <label>Indirizzo </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control text-uppercase" id="indirizzodom" name="indirizzodom" />
                                                                     </div>
-                                                                    <input type="hidden" class="form-control text-uppercase" id="civicodom" name="civicodom" value="" />
+                                                                    <input type="hidden" class="form-control text-uppercase" id="civicodom" name="civicodom" value="0" />
                                                                     <div class="form-group col-xl-2 col-lg-6">
                                                                         <label>CAP </label><label class="kt-font-danger kt-font-boldest">*</label>
                                                                         <input type="text" class="form-control text-uppercase" id="capdom" name="capdom"  onkeypress="return isNumber(event);"/>

@@ -418,6 +418,9 @@ public class OperazioniSA extends HttpServlet {
         } else if (save.equals("0")) {
             salvataggio = true;
         }
+        
+        System.out.println("rc.so.servlet.OperazioniSA.newAllievo() "+save);
+        
         File downloadFile = null;
 
         Entity e = new Entity();
@@ -631,7 +634,9 @@ public class OperazioniSA extends HttpServlet {
         } finally {
             e.close();
         }
-
+        
+        System.out.println("rc.so.servlet.OperazioniSA.newAllievo() "+resp.toString());
+        
         if (salvataggio) {
             response.getWriter()
                     .write(resp.toString());
@@ -1655,6 +1660,7 @@ public class OperazioniSA extends HttpServlet {
                 a.setCognome(conversionText(request.getParameter("cognome").toUpperCase()));
                 a.setCodicefiscale(request.getParameter("codicefiscale").toUpperCase());
                 a.setDatanascita(sdf.parse(request.getParameter("datanascita")));
+                a.setScadenzadocid(sdf.parse(request.getParameter("scadenzadoc")));                
                 a.setTelefono(request.getParameter("telefono"));
                 a.setIndirizzoresidenza(conversionText(request.getParameter("indirizzores")));
                 a.setCapresidenza(request.getParameter("capres"));
@@ -1679,6 +1685,9 @@ public class OperazioniSA extends HttpServlet {
                 a.setCpi((CPI) e.getEm().find(CPI.class,
                         request.getParameter("cpi")));
                 a.setDatacpi(new Date());
+                
+                
+                
                 //29-04-2020 MODIFICA - CONDIZIONE LAVORATIVA PRECEDENTE
                 a.setCondizione_lavorativa((Condizione_Lavorativa) e.getEm().find(Condizione_Lavorativa.class,
                         parseIntR(request.getParameter("condizione_lavorativa"))));
