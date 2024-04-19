@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import rc.so.db.Action;
+import java.io.File;
 import static rc.so.db.Action.insertTR;
 import rc.so.db.Database;
 import rc.so.db.Entity;
@@ -38,6 +38,7 @@ import static rc.so.util.Utility.estraiEccezione;
 import static rc.so.util.Utility.writeJsonResponseR;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,6 +50,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.FilenameUtils;
 import rc.so.domain.SediFormazione;
 
 /**
@@ -230,16 +232,21 @@ public class QuerySA extends HttpServlet {
     protected void getDocAllievo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Entity e = new Entity();
         try {
-            Allievi a = e.getEm().find(Allievi.class, Long.parseLong(request.getParameter("idallievo")));
+            Allievi a = e.getEm().find(Allievi.class, Long.valueOf(request.getParameter("idallievo")));
             List<Documenti_Allievi> docs = e.getDocAllievo(a);
             MascheraM5 m5_allievo = e.getM5_byAllievo(a);
-            if (m5_allievo != null && m5_allievo.getDomanda_ammissione() != null) {
-                TipoDoc_Allievi dA = new TipoDoc_Allievi();
-                dA.setDescrizione("DOMANDA AMMISSIONE");
-                dA.setEstensione("pdf");
-                dA.setMimetype("application/pdf");
-                Documenti_Allievi domandaAmmissione = new Documenti_Allievi(m5_allievo.getDomanda_ammissione(), dA, null, a);
-                docs.add(domandaAmmissione);
+            if (m5_allievo != null) {
+                if (m5_allievo.isBusinessplan_presente()) {
+                    File bp = new File(m5_allievo.getBusinessplan_path());
+                    if (bp.exists() && bp.canRead()) {
+                        TipoDoc_Allievi dA = new TipoDoc_Allievi();
+                        dA.setDescrizione("BUSINESS PLAN");
+                        dA.setEstensione(FilenameUtils.getExtension(bp.getName()));
+                        dA.setMimetype(Files.probeContentType(bp.toPath()));
+                        Documenti_Allievi domandaAmmissione = new Documenti_Allievi(m5_allievo.getBusinessplan_path(), dA, null, a);
+                        docs.add(domandaAmmissione);
+                    }
+                }
             }
             ObjectMapper mapper = new ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(docs));
@@ -422,30 +429,26 @@ public class QuerySA extends HttpServlet {
         }
     }
 
-    protected void getAllieviByProgetto2(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void getAllieviByProgetto(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Entity e = new Entity();
         e.begin();
         try {
-            Long hh36 = Long.valueOf(129600000);
-            ProgettiFormativi p = e.getEm().find(ProgettiFormativi.class, Long.parseLong(request.getParameter("id")));
-            Map<Long, Long> oreRendicontateFaseA = Action.OreRendicontabiliAlunni_faseA(p.getId().intValue());
+            Long hhSOGLIA = Long.valueOf(e.getPath("fb.sogliaore.millis"));
+            ProgettiFormativi p = e.getEm().find(ProgettiFormativi.class, Long.valueOf(request.getParameter("id")));
             List<Allievi> a = e.getAllieviProgettiFormativi(p);
             if (request.getParameter("load").equalsIgnoreCase("si")) {
                 AtomicInteger modificato = new AtomicInteger(0);
                 List<Allievi> non_associati = a.stream().filter(a1 -> a1.getGruppo_faseB() == -1).collect(Collectors.toList());
                 non_associati.forEach(nonassociato -> {
-
-                    if (oreRendicontateFaseA.get(nonassociato.getId()) != null && oreRendicontateFaseA.get(nonassociato.getId()).compareTo(hh36) > 0) {
+                    if (Double.valueOf(nonassociato.getImporto()).longValue() >= hhSOGLIA) {
                         nonassociato.setGruppo_faseB(0);
                         e.merge(nonassociato);
                         modificato.addAndGet(1);
                     }
-
                 });
                 if (modificato.get() > 0) {
                     e.commit();
                 }
-
                 List<String[]> list = new ArrayList();
                 String[] lneet;
                 Map<Integer, List<Allievi>> byGruppi = a.stream().collect(Collectors.groupingBy(t -> t.getGruppo_faseB()));
@@ -462,14 +465,13 @@ public class QuerySA extends HttpServlet {
             } else {
                 //SETTO I NEETS CHE NON RAGGIUNGONO LE 36 HH CON GRUPPO -1
                 for (Allievi as : a) {
-                    if (oreRendicontateFaseA.get(as.getId()) != null && oreRendicontateFaseA.get(as.getId()).compareTo(hh36) < 0) {
+                    if (Double.valueOf(as.getImporto()).longValue() < hhSOGLIA) {
                         as.setGruppo_faseB(-1);
                         e.merge(as);
                     }
                 }
                 e.merge(p);
                 e.commit();
-
                 List<Allievi> list = new ArrayList();
                 for (Allievi al : a) {
                     list.add(new Allievi(al.getId(), al.getNome(), al.getCognome(), al.getGruppo_faseB()));
@@ -482,40 +484,6 @@ public class QuerySA extends HttpServlet {
             insertTR("E", String.valueOf(((User) request.getSession().getAttribute("user")).getId()), estraiEccezione(ex));
         } finally {
             e.close();
-        }
-    }
-
-    protected void getAllieviByProgetto(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Entity e = new Entity();
-        try {
-            ProgettiFormativi p = e.getEm().find(ProgettiFormativi.class, Long.valueOf(request.getParameter("id")));
-            List<Allievi> a = e.getAllieviProgettiFormativi(p);
-
-            if (request.getParameter("load").equalsIgnoreCase("si")) {
-                List<String[]> list = new ArrayList();
-                String[] lneet;
-                Map<Integer, List<Allievi>> byGruppi = a.stream().collect(Collectors.groupingBy(t -> t.getGruppo_faseB()));
-                for (Map.Entry<Integer, List<Allievi>> it : byGruppi.entrySet()) {
-                    lneet = new String[it.getValue().size()];
-                    for (int j = 0; j < it.getValue().size(); j++) {
-                        lneet[j] = it.getValue().get(j).getNome() + " " + it.getValue().get(j).getCognome();
-                    }
-                    list.add(new String[]{String.valueOf(it.getKey()), String.join(", ", lneet)});
-                }
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.setSerializationInclusion(Include.NON_NULL);
-                response.getWriter().write(mapper.writeValueAsString(list));
-            } else {
-                List<Allievi> list = new ArrayList();
-                for (Allievi al : a) {
-                    list.add(new Allievi(al.getId(), al.getNome(), al.getCognome(), al.getGruppo_faseB()));
-                }
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.setSerializationInclusion(Include.NON_NULL);
-                response.getWriter().write(mapper.writeValueAsString(list));
-            }
-        } catch (Exception ex) {
-            insertTR("E", String.valueOf(((User) request.getSession().getAttribute("user")).getId()), estraiEccezione(ex));
         }
     }
 

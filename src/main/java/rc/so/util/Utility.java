@@ -8,6 +8,7 @@ package rc.so.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import static com.google.common.base.Splitter.on;
+import com.google.common.primitives.Ints;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -124,6 +125,7 @@ import org.joda.time.format.DateTimeFormat;
 import static org.joda.time.format.DateTimeFormat.forPattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import rc.so.db.Entity;
 
 /**
  *
@@ -711,15 +713,7 @@ public class Utility {
         Long hh64 = Long.valueOf(230400000);
         Map<Long, Long> oreRendicontabili = Action.OreRendicontabiliAlunni(idpf);
         Map<Long, Boolean> ids = new HashMap();
-        int i = 1;
-        for (MascheraM5 m : m5) {
-            if (oreRendicontabili.get(m.getAllievo().getId()) != null && oreRendicontabili.get(m.getAllievo().getId()).compareTo(hh64) > 0) {
-                if (m.isTabella_premialita() && m.getTabella_premialita_punteggio() > 0) {
-                    ids.put(m.getAllievo().getId(), true);
-                }
-            }
-            i++;
-        }
+
         return ids;
 
     }
@@ -820,16 +814,13 @@ public class Utility {
     public static String roundDoubleAndFormat(double f) {
         try {
             String out = new DecimalFormat("###,###.#", DecimalFormatSymbols.getInstance(Locale.ITALIAN))
-                    .format(BigDecimal.valueOf(f).setScale(2, ROUND_HALF_DOWN).doubleValue());
+                    .format(BigDecimal.valueOf(f).setScale(2, ROUND_HALF_DOWN)
+                            .doubleValue());            
             if (out.startsWith(",0")) {
                 return "0";
             } else {
                 return out;
-            }
-
-//            BigDecimal bigDecimal = new BigDecimal(Double.toString(f));
-//            bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_EVEN);
-//            return numITA.format(bigDecimal).replaceAll("[^0123456789.,()-]", "").trim();
+            }            
         } catch (Exception ex) {
             insertTR("E", "SERVICE", estraiEccezione(ex));
         }
@@ -885,13 +876,10 @@ public class Utility {
     }
 
     public static int allieviOK(long idp, List<Allievi> l) {
-        Long hh36 = Long.valueOf(129600000);
-//        Long hh64 = new Long(230400000);
-//        Map<Long, Long> oreRendicontabili = Action.OreRendicontabiliAlunni((int) (long) idp);
-        Map<Long, Long> oreRendicontabili_faseA = Action.OreRendicontabiliAlunni_faseA((int) (long) idp);
         int count = l.size();
+        Entity e = new Entity();
         for (Allievi a : l) {
-            if (oreRendicontabili_faseA.get(a.getId()) != null && oreRendicontabili_faseA.get(a.getId()).compareTo(hh36) < 0) {
+            if (a.getOrec_fasea() < parseDouble(e.getPath("fb.sogliaore"))) {
                 count--;
             }
         }
@@ -918,9 +906,35 @@ public class Utility {
         return l.stream().filter(a -> oreRendicontabili_docenti.get(a.getId()) != null).collect(Collectors.toList());
     }
 
-    public static List<Docenti> docenti_ore_A(long idp, List<Docenti> l) {
-        Map<Long, Long> oreRendicontabili_docenti = Action.OreRendicontabiliDocentiFASEA((int) (long) idp);
-        return l.stream().filter(a -> oreRendicontabili_docenti.get(a.getId()) != null).collect(Collectors.toList());
+    public static List<Docenti> docenti_A(Entity e, ProgettiFormativi pf) {
+
+        List<Docenti> resp = new ArrayList<>();
+
+        Database d1 = new Database(false);
+        List<rc.so.db.Registro_completo> out = d1.registro_modello6(Ints.checkedCast(pf.getId()));
+        d1.closeDB();
+
+        List<rc.so.db.Registro_completo> docentifaseA = out.stream().filter(r1
+                -> r1.getRuolo().equalsIgnoreCase("DOCENTE")
+                && r1.getFase().equalsIgnoreCase("A")).collect(Collectors.toList());
+
+        List<Integer> docentiid = docentifaseA.stream().map(r1
+                -> r1.getIdutente()).distinct().collect(Collectors.toList());
+
+        docentiid.forEach(r1 -> {
+            Docenti docente = e.getEm().find(Docenti.class, Long.valueOf(String.valueOf(r1)));
+            if (docente != null) {
+                AtomicLong totaleA = new AtomicLong(0L);
+                docentifaseA.stream().filter(d11 -> d11.getIdutente() == r1).forEach(a1 -> {
+                    totaleA.addAndGet(a1.getTotaleorerendicontabili());
+                });
+                docente.setOrec_faseA(parseDouble(roundFloatAndFormat(totaleA.get(), true, false)));
+                resp.add(docente);
+            }
+
+        });
+
+        return resp;
     }
 
     public static String convertToHours_R(long value1) {
@@ -946,10 +960,11 @@ public class Utility {
         return ret;
     }
 
-    public static Map<String, String> mapCoeffDocenti(String fasciaA, String fasciaB) {
+    public static Map<String, String> mapCoeffDocenti(String fasciaA, String fasciaB, String fasciaC) {
         Map<String, String> m = new HashMap();
         m.put("FA", fasciaA);
         m.put("FB", fasciaB);
+        m.put("FC", fasciaC);
         return m;
     }
 
@@ -995,6 +1010,9 @@ public class Utility {
 
     public static double parseDouble(String f) {
         try {
+            if (f.contains(",")) {
+                f = StringUtils.replace(f, ",", ".");
+            }
             BigDecimal bigDecimal = new BigDecimal(f);
             bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_EVEN);
             return bigDecimal.doubleValue();
@@ -1049,10 +1067,14 @@ public class Utility {
 
     public static String getstatoannullato(String stato_prec) {
         return switch (stato_prec) {
-            case "ATA", "ATB" -> stato_prec + "E";
-            case "SOA" -> "ATAE";
-            case "SOB" -> "ATBE";
-            default -> "DVBE";
+            case "ATA", "ATB" ->
+                stato_prec + "E";
+            case "SOA" ->
+                "ATAE";
+            case "SOB" ->
+                "ATBE";
+            default ->
+                "DVBE";
         };
     }
 
@@ -1073,7 +1095,7 @@ public class Utility {
     public static long convertHours(String ore) {
         try {
             double d1 = Double.parseDouble(ore);
-            if(d1==-1.0){
+            if (d1 == -1.0) {
                 return -1;
             }
             long tot = Math.round(d1) * 3600000;
@@ -1338,9 +1360,9 @@ public class Utility {
 
     public static List<Allievi> estraiAllieviOK(ProgettiFormativi p) {
         try {
-            List<Allievi> a = p.getAllievi().stream().filter(al -> 
-                    al.getStatopartecipazione().getId()
-                    .equalsIgnoreCase("13") || al.getStatopartecipazione().getId()
+            List<Allievi> a = p.getAllievi().stream().filter(al
+                    -> al.getStatopartecipazione().getId()
+                            .equalsIgnoreCase("13") || al.getStatopartecipazione().getId()
                     .equalsIgnoreCase("14") || al.getStatopartecipazione().getId()
                     .equalsIgnoreCase("15")
             ).collect(Collectors.toList());
@@ -1388,4 +1410,82 @@ public class Utility {
             return 0L;
         }
     }
+
+    public static String roundFloatAndFormat(float f, boolean converttoHours, boolean zero) {
+        String out = "0";
+        try {
+            if (converttoHours) {
+                double hours = f / 1000.0 / 60.0 / 60.0;
+                BigDecimal bigDecimal = new BigDecimal(hours);
+                bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_EVEN);
+                out = numITA.format(bigDecimal).replaceAll("[^0123456789.,()-]", "").trim();
+                if (out.startsWith(",0")) {
+                    out = "0";
+                } else {
+                    if (out.endsWith(",00")) {
+                        out = StringUtils.remove(out, ",00");
+                    } else if (out.endsWith(",0")) {
+                        out = StringUtils.remove(out, ",0");
+                    } else if (out.contains(",") && out.endsWith("0")) {
+                        out = StringUtils.removeEnd(out, "0");
+                    }
+                }
+            } else {
+                BigDecimal bigDecimal = new BigDecimal(Float.toString(f));
+                bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_EVEN);
+                out = numITA.format(bigDecimal).replaceAll("[^0123456789.,()-]", "").trim();
+                if (out.endsWith(",00")) {
+                    out = StringUtils.remove(out, ",00");
+                } else if (out.endsWith(",0")) {
+                    out = StringUtils.remove(out, ",0");
+                } else if (out.contains(",") && out.endsWith("0")) {
+                    out = StringUtils.removeEnd(out, "0");
+                }
+            }
+        } catch (Exception ex) {
+            insertTR("E", "SERVICE", estraiEccezione(ex));
+            out = "0";
+        }
+
+        if (zero) {
+            return out;
+        } else {
+            if (out.equals("0")) {
+                return "";
+            }
+            return out;
+        }
+
+    }
+    
+    public static String roundDoubleAndFormat(double f, boolean zero) {
+        String out = "0";
+        try {
+            BigDecimal bigDecimal = new BigDecimal(f);
+            bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_EVEN);
+            out = numITA.format(bigDecimal).replaceAll("[^0123456789.,()-]", "").trim();
+            if (out.endsWith(",00")) {
+                out = StringUtils.remove(out, ",00");
+            } else if (out.endsWith(",0")) {
+                out = StringUtils.remove(out, ",0");
+            } else if (out.contains(",") && out.endsWith("0")) {
+                out = StringUtils.removeEnd(out, "0");
+            }
+
+        } catch (Exception ex) {
+            insertTR("E", "SERVICE", estraiEccezione(ex));
+            out = "0";
+        }
+
+        if (zero) {
+            return out;
+        } else {
+            if (out.equals("0")) {
+                return "";
+            }
+            return out;
+        }
+    }
+    
+    
 }

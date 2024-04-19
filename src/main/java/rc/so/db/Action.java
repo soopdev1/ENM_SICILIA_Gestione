@@ -382,7 +382,7 @@ public class Action {
 
     public static List<Registro_completo> registro_modello6(String idpr) {
         Database db = new Database(false);
-        List<Registro_completo> rc = db.registro_modello6(idpr);
+        List<Registro_completo> rc = db.registro_modello6(Utility.parseIntR(idpr));
         db.closeDB();
         return rc;
     }

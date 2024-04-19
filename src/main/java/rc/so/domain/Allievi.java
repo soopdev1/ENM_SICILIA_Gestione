@@ -41,7 +41,7 @@ import javax.persistence.Transient;
     @NamedQuery(name = "a.byEmail", query = "SELECT a FROM Allievi a WHERE a.email=:email AND a.statopartecipazione.id IN ('10','12','13','14','15','18','19')"),
     @NamedQuery(name = "allievi.daassegnare", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id='10'"),
     @NamedQuery(name = "allievi.assegnatisoggetto", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id IN ('12','13') AND a.soggetto=:soggetto and a.progetto=null"),
-    @NamedQuery(name = "allievi.modello1", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id='13' AND a.soggetto=:soggetto and a.progetto=null AND a.stato='A'"),
+    @NamedQuery(name = "allievi.modello1", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id IN ('13','14') AND a.soggetto=:soggetto and a.progetto=null AND a.stato='A'"),
     @NamedQuery(name = "allievi.attivi", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id='13' AND a.progetto=:progetto"),})
 @JsonIgnoreProperties(value = {"documenti"})
 public class Allievi implements Serializable {
@@ -265,10 +265,102 @@ public class Allievi implements Serializable {
     @Column(name = "dipendente")
     private String dipendente;
 
+    //FREQUENZA
+    @Column(name = "orec_totali")
+    private double orec_totali;
+    @Column(name = "orec_fasea")
+    private double orec_fasea;
+    @Column(name = "orec_faseb")
+    private double orec_faseb;
+
+    @Column(name = "ud_ok_A")
+    private int ud_ok_A;
+    @Column(name = "ud_ok_B")
+    private int ud_ok_B;
+    @Column(name = "assenzeOK")
+    private int assenzeOK;
+    @Column(name = "assenzeKO")
+    private int assenzeKO;
+    
     public Allievi() {
         this.pregresso = false;
     }
+    
+    public String formatTarget(){
+        try{
+            switch(this.partecipazione){
+                case "01" -> {
+                    return "TARGET 1 - Disoccupato/inoccupato, in possesso di DID in corso di validità";
+                }
+                case "02" -> {
+                    return "TARGET 2 - Persona in condizione di disagio socio-economico, in possesso di DID in corso di validità";
+                }
+                case "03" -> {
+                    return "TARGET 3 - Persona destinataria di politiche passive (CIG)";                    
+                }
+            }
+        }catch(Exception ex){
+            
+        }
+        return "";
+    }
 
+    public double getOrec_totali() {
+        return orec_totali;
+    }
+
+    public void setOrec_totali(double orec_totali) {
+        this.orec_totali = orec_totali;
+    }
+
+    public double getOrec_fasea() {
+        return orec_fasea;
+    }
+
+    public void setOrec_fasea(double orec_fasea) {
+        this.orec_fasea = orec_fasea;
+    }
+
+    public double getOrec_faseb() {
+        return orec_faseb;
+    }
+
+    public void setOrec_faseb(double orec_faseb) {
+        this.orec_faseb = orec_faseb;
+    }
+
+    public int getUd_ok_A() {
+        return ud_ok_A;
+    }
+
+    public void setUd_ok_A(int ud_ok_A) {
+        this.ud_ok_A = ud_ok_A;
+    }
+
+    public int getUd_ok_B() {
+        return ud_ok_B;
+    }
+
+    public void setUd_ok_B(int ud_ok_B) {
+        this.ud_ok_B = ud_ok_B;
+    }
+
+    public int getAssenzeOK() {
+        return assenzeOK;
+    }
+
+    public void setAssenzeOK(int assenzeOK) {
+        this.assenzeOK = assenzeOK;
+    }
+
+    public int getAssenzeKO() {
+        return assenzeKO;
+    }
+
+    public void setAssenzeKO(int assenzeKO) {
+        this.assenzeKO = assenzeKO;
+    }
+    
     public String getDipendente() {
         return dipendente;
     }

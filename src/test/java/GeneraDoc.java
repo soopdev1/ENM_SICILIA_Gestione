@@ -11,6 +11,7 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import rc.so.domain.Allievi;
 import rc.so.domain.Lezioni_Modelli;
+import rc.so.domain.ModelliPrg;
 
 
 /*
@@ -26,25 +27,25 @@ public class GeneraDoc {
 
     public static void main(String[] args) {
         java.util.logging.Logger.getLogger(
-        "org.apache").setLevel(java.util.logging.Level.SEVERE);
+                "org.apache").setLevel(java.util.logging.Level.SEVERE);
 
-//        String idpr = "614";
-//        String idall = "2469";
-//        String usernameSA = "FLCOMMERCIALISTI";
+        String idpr = "8";
+//        String idall = "65";
+        String usernameSA = "TST";
 
         Entity e = new Entity();
         e.begin();
-//        ProgettiFormativi prg = e.getEm().find(ProgettiFormativi.class,
-//                Long.valueOf(idpr));
+        ProgettiFormativi prg = e.getEm().find(ProgettiFormativi.class,
+                Long.valueOf(idpr));
 //        Allievi al = e.getEm().find(Allievi.class, 
 //                Long.valueOf(idall));
-    
-            Lezioni_Modelli lm = e.getEm().find(Lezioni_Modelli.class, 2L);
-            File f1 = Pdf_new.REGISTROCARTACEO(e, "rcc", lm, new DateTime());
-//        ModelliPrg m3 = Utility.filterModello3(prg.getModelli());
-//        ModelliPrg m4 = Utility.filterModello4(prg.getModelli());
-//        File f1 = Pdf_new.MODELLO0(e, "30", al);
-        System.out.println(f1.getPath());
+
+//            Lezioni_Modelli lm = e.getEm().find(Lezioni_Modelli.class, 2L);
+//            File f1 = Pdf_new.REGISTROCARTACEO(e, "rcc", lm, new DateTime());
+////        ModelliPrg m3 = Utility.filterModello3(prg.getModelli());
+////        ModelliPrg m4 = Utility.filterModello4(prg.getModelli());
+////        File f1 = Pdf_new.MODELLO0(e, "30", al);
+//        System.out.println(f1.getPath());
 //        File f2 = Pdf_new.MODELLO2(e,
 //                            "1",
 //                            usernameSA, prg.getSoggetto(),
@@ -52,7 +53,6 @@ public class GeneraDoc {
 //                            prg.getAllievi().stream().filter(a1-> a1.getStatopartecipazione().getId().equals("01")).collect(Collectors.toList()) , new DateTime(), true);
 //        
 //        System.out.println(f2.getPath());
-
 //        File f3 = Pdf_new.MODELLO3(e,
 //                            usernameSA,
 //                            prg.getSoggetto(),
@@ -110,10 +110,16 @@ public class GeneraDoc {
 //
 //            System.out.println(f6.getPath());
 //        }
+
 //        Map<Long, Long> oreRendicontabili = Action.OreRendicontabiliAlunni((int) (long) prg.getId());
-//        File f7 = Pdf_new.MODELLO7(e, usernameSA, al, Utility.roundFloatAndFormat(oreRendicontabili.get(al.getId()), true),
-//                new DateTime(), true);
+//        File f7 = Pdf_new.MODELLO7(e, usernameSA, al, new DateTime(), true);
 //        System.out.println(f7.getPath());
+        
+        String pathtemp = e.getPath("pathtemp");
+//        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+        System.out.println(ch_pdf.getPath());
+
         e.close();
 //        
 //        String o = Pdf_new.checkFirmaQRpdfA("MODELLO1", "", new File("C:\\Users\\Administrator\\Desktop\\da caricare\\INFO05_MOISE_CLAUDIASILVIA_041120211144476.M1_pdfA.pdf"), "", "20;0;60;60");

@@ -1,3 +1,4 @@
+<%@page import="rc.so.domain.Presenze_Lezioni"%>
 <%@page import="java.util.LinkedList"%>
 <%@page import="rc.so.domain.TipoDoc"%>
 <%@page import="java.util.Date"%>
@@ -40,7 +41,6 @@
             List<LezioneCalendario> grouppedByLezione = Utility.grouppedByLezione(lezioniCalendario);
             boolean isEditable = Utility.isEditableModel(lezioni);
             String idsedefisica = p.getSedefisica() != null ? String.valueOf(p.getSedefisica().getId()) : "";
-            e.close();
 %>
 <html>
     <head>
@@ -272,7 +272,16 @@
                                                                class='btn-icon kt-font-io document disablelink'>
                                                                 <i class='fa fa-file-invoice kt-font-io' style='font-size: 100px;'></i>
                                                             </a>
-                                                            <%}%>
+                                                            <%if (!temp.getTipolez().equals("F")) {
+
+                                                                    Presenze_Lezioni pl1 = e.getPresenzeLezione(temp.getId());
+                                                                    String btn = pl1 == null ? "btn-primary" : "btn-success";
+                                                            %>
+                                                            | <a  data-container="body" data-html="true" data-toggle="kt-tooltip" title="INSERISCI/VISUALIZZA REGISTRO PRESENZE" 
+                                                                  href="calendar.jsp?idcalendar=<%=temp.getId()%>&idgruppo=<%=i%>" 
+                                                                  class='btn btn-icon btn-sm <%=btn%>'><i class='fa fa-calendar-alt' style='font-size: 20px;'></i></a>
+                                                                <%}%>
+                                                                <%}%>
                                                         </div>
 
                                                         <%}%> 
@@ -373,6 +382,8 @@
         <div id="kt_scrolltop" class="kt-scrolltop">
             <i class="fa fa-arrow-up"></i>
         </div>
+                    
+                    <%e.close();%>
         <script src="<%=src%>/assets/soop/js/jquery-3.6.1.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/vendors/general/popper.js/dist/umd/popper.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/vendors/general/tooltip.js/dist/umd/tooltip.min.js" type="text/javascript"></script>

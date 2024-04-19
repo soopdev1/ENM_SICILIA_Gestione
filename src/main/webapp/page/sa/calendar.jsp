@@ -30,6 +30,10 @@
             String src = session.getAttribute("src").toString();
             Entity e = new Entity();
             Lezioni_Modelli lm = e.getEm().find(Lezioni_Modelli.class, Long.parseLong(request.getParameter("idcalendar")));
+            String gruppo = Utility.getRequestValue(request, "idgruppo");
+
+            String etichettagruppo = gruppo.equals("") ? "" : "<u>GRUPPO " + gruppo + "</u>";
+            String redirmodello = gruppo.equals("") ? "modello3.jsp" : "modello4.jsp";
 
             ProgettiFormativi p = lm.getModello().getProgetto();
 
@@ -156,13 +160,14 @@
                                             <div class="row">
                                                 <div class="col-12">
                                                     <h5><a data-container="body" data-html="true" data-toggle="kt-tooltip" title="TORNA INDIETRO" 
-                                                           href="modello3.jsp?id=<%=p.getId()%>" class='btn-icon kt-font-io'><i class="fa fa-arrow-left"></i>
-                                                        </a> REGISTRO PRESENZE LEZIONE <%=Utility.sdfITA.format(lm.getGiorno())%> - <%=lm.getLezione_calendario().getUnitadidattica().getCodice()%> 
-                                                        (<%=lm.getLezione_calendario().getUnitadidattica().getDescrizione()%>) </h5>
+                                                           href="<%=redirmodello%>?id=<%=p.getId()%>" class='btn-icon kt-font-io'><i class="fa fa-arrow-left"></i>
+                                                        </a> <%=etichettagruppo%> REGISTRO PRESENZE LEZIONE <%=Utility.sdfITA.format(lm.getGiorno())%> - <%=lm.getLezione_calendario().getUnitadidattica().getCodice()%> 
+                                                        (<%=lm.getLezione_calendario().getUnitadidattica().getDescrizione()%>) - <%=lm.getLezione_calendario().getUnitadidattica().getFase()%></h5>
                                                         <%if (modify) {%>
                                                     <form action="<%=request.getContextPath()%>/OperazioniSA" method="POST" target="_blank">
                                                         <input type="hidden" name="type" value="SCARICAREGISTROCARTACEOBASE" />
                                                         <input type="hidden" name="idcalendar" value="<%=lm.getId()%>" />
+                                                        <input type="hidden" name="idgruppo" value="<%=gruppo%>" />
                                                         <button type="submit" class='btn-icon kt-font-io'><small><i class="fa fa-file-download"></i> SCARICA REGISTRO CARTACEO DA COMPILARE</small></button>
                                                     </form>
                                                     <%}%>

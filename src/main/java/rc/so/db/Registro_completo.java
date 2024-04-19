@@ -32,15 +32,55 @@ public class Registro_completo {
     //modello6
     //docenti
     String cf, fascia;
-    long data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12;
+    long data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14, data15, data16;
 
     //allieviB
     int gruppoB;
 
     //allieviA
-    String datapattogg, domandaammissione, modello5;
+    String datapattogg, domandaammissione, modello5, target;
 
     public Registro_completo() {
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public long getData13() {
+        return data13;
+    }
+
+    public void setData13(long data13) {
+        this.data13 = data13;
+    }
+
+    public long getData14() {
+        return data14;
+    }
+
+    public void setData14(long data14) {
+        this.data14 = data14;
+    }
+
+    public long getData15() {
+        return data15;
+    }
+
+    public void setData15(long data15) {
+        this.data15 = data15;
+    }
+
+    public long getData16() {
+        return data16;
+    }
+
+    public void setData16(long data16) {
+        this.data16 = data16;
     }
 
     public String getDatapattogg() {

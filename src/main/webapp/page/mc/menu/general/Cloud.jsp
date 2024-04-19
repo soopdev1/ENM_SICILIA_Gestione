@@ -6,7 +6,7 @@
 <li class="kt-menu__item <%=cloud%>" aria-haspopup="true" data-ktmenu-submenu-toggle="hover">
     <a href="javascript:;" class="kt-menu__link kt-menu__toggle">
         <span class="kt-menu__link-icon"><i class="fa fa-folder-open"></i></span>
-        <span class="kt-menu__link-text">Materiale didattico</span>
+        <span class="kt-menu__link-text">Materiale Didattico/Promozionale</span>
         <i class="kt-menu__ver-arrow la la-angle-right"></i>
     </a>
     <div class="kt-menu__submenu">
@@ -18,7 +18,7 @@
                     <i class="kt-menu__link-bullet fa fa-edit">
                         <span></span>
                     </i>
-                    <span class="kt-menu__link-text">Gestisci</span>
+                    <span class="kt-menu__link-text">Materiale Didattico</span>
                 </a>
             </li>
             <%}%>
@@ -28,6 +28,14 @@
                         <span></span>
                     </i>
                     <span class="kt-menu__link-text">Modelli in Facsimile</span>
+                </a>
+            </li>
+            <li class="kt-menu__item <%=pageName.equals("downloadModelliPR.jsp") ? "kt-menu__item--active" : ""%>" aria-haspopup="true">
+                <a href="downloadModelliPR.jsp" class="kt-menu__link ">
+                    <i class="kt-menu__link-bullet fa fa-file-download">
+                        <span></span>
+                    </i>
+                    <span class="kt-menu__link-text">Materiale Promozionale</span>
                 </a>
             </li>
         </ul>

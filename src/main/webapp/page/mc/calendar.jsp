@@ -36,12 +36,11 @@
             //  String idsedefisica = p.getSedefisica() != null ? String.valueOf(p.getSedefisica().getId()) : "";
             Presenze_Lezioni pl1 = e.getPresenzeLezione(lm);
             List<Presenze_Lezioni_Allievi> pa1 = new ArrayList<>();
-            boolean modify = false;
-
+            boolean modify = false;            
             if (pl1 != null) {
                 pa1 = e.getpresenzelezioniGiornata(pl1);
             }
-
+            int idgruppo = Utility.parseIntR(Utility.getRequestValue(request, "idgruppo"));
             e.close();
 %>
 <html>
@@ -285,7 +284,14 @@
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                <%for (Allievi a1 : Utility.estraiAllieviOK(p)) {
+                                                                <%List<Allievi> davis = Utility.estraiAllieviOK(p);
+                                                                    for (Allievi a1 : davis) {
+
+                                                                        if (idgruppo > 0) {
+                                                                            if (a1.getGruppo_faseB() != idgruppo) {
+                                                                                continue;
+                                                                            }
+                                                                        }
 
                                                                         boolean modifyallievo = false;
                                                                         String allievo_presente = "0";

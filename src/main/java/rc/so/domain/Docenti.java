@@ -141,6 +141,8 @@ public class Docenti implements Serializable {
     @JsonIgnore
     List<Attivita_Docente> attivita;
     
+    @Transient
+    private double orec_faseA;
     
     public Docenti(String nome, String cognome, String codicefiscale, Date datanascita) {
         this.nome = nome;
@@ -177,31 +179,52 @@ public class Docenti implements Serializable {
         if(null == this.stato){
             return "";
         }else switch (this.stato) {
-            case "A":
+            case "A" -> {
                 return "ACCREDITATO";
-            case "DV":
+            }
+            case "DV" -> {
                 return "DA VALIDARE";
-            case "W":
+            }
+            case "W" -> {
                 return "IN ATTESA WEBINAIR";
-            case "R":
+            }
+            case "R" -> {
                 return "RIGETTATO";
-            default:
-                break;
+            }
+            default -> {
+            }
         }
         return "";
     }
 
     public void setDescrizionestato() {
-        if(this.stato == null){
+        if(null == this.stato){
             this.descrizionestato = "";
-        }else if(this.stato.equals("A")){
-            this.descrizionestato = "ACCREDITATO";
-        }else if(this.stato.equals("DV")){
-            this.descrizionestato = "DA VALIDARE";
-        }else if(this.stato.equals("R")){
-            this.descrizionestato = "RIGETTATO";
+        }else switch (this.stato) {
+            case "A":
+                this.descrizionestato = "ACCREDITATO";
+                break;
+            case "DV":
+                this.descrizionestato = "DA VALIDARE";
+                break;
+            case "R":
+                this.descrizionestato = "RIGETTATO";
+                break;
+            case "W":
+                this.descrizionestato = "IN ATTESA WEBINAIR";
+                break;
+            default:
+                break;
         }
         this.descrizionestato = "";
+    }
+
+    public double getOrec_faseA() {
+        return orec_faseA;
+    }
+
+    public void setOrec_faseA(double orec_faseA) {
+        this.orec_faseA = orec_faseA;
     }
     
     public SoggettiAttuatori getSoggetto() {

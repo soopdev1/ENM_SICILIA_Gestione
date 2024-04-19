@@ -42,7 +42,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>YES I Start Up - Sicilia - Modello 3</title>
+        <title>YES I Start Up - Sicilia - Modelli</title>
         <meta name="description" content="Updates and statistics">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <script src="<%=src%>/resource/webfont.js"></script>
@@ -268,7 +268,8 @@
                                             <h5 class="kt-font-io"><i class="fa fa-users kt-font-io"></i> Gruppo <%=i%></h5>
                                             <div class="form-row">
                                                 <%for (LezioneCalendario lez : grouppedByLezionem4) {
-                                                        if (Utility.lezioneFilteredByGroup(lezionim4, lez.getId(), i) != null) {
+                                                        Lezioni_Modelli temp = Utility.lezioneFilteredByGroup(lezionim4, lez.getId(), i);
+                                                        if (temp != null) {
                                                             noloaded = false;%>
                                                 <div class='col-lg-2 col-md-4 col-sm-6'>
                                                     <div class='row'>
@@ -283,6 +284,24 @@
                                                             <a href="javascript:void(0)" id="a_lez<%=lez.getLezione()%>_<%=i%>" onclick="showLezioneSingleM4(<%=lez.getId()%>, <%=lez.getLezione()%>, <%=i%>)" class='btn-icon kt-font-io document gruppi'>
                                                                 <i class='fa fa-file-invoice kt-font-io' style='font-size: 100px;'></i>
                                                             </a>
+                                                            <%if (!temp.getTipolez().equals("F")) {
+
+                                                                    Presenze_Lezioni pl1 = e.getPresenzeLezione(temp.getId());
+                                                                    if (pl1 != null) {
+                                                                        String btn = "btn-success";
+                                                            %>
+                                                            | <a  data-container="body" data-html="true" data-toggle="kt-tooltip" 
+                                                                  title="VISUALIZZA REGISTRO PRESENZE" 
+                                                                  href="calendar.jsp?idcalendar=<%=temp.getId()%>&idgruppo=<%=i%>" 
+                                                                  class='btn btn-icon btn-sm <%=btn%>'><i class='fa fa-calendar-alt' style='font-size: 20px;'></i></a>
+                                                                <%} else {%>
+                                                            | <a  data-container="body" data-html="true" data-toggle="kt-tooltip" 
+                                                                  title="REGISTRO PRESENZE DA CARICARE" 
+                                                                  href=""
+                                                                  onclick="return false;"
+                                                                  class='btn btn-icon btn-sm btn-danger'><i class='fa fa-calendar-alt' style='font-size: 20px;'></i></a>
+                                                                <%}%>
+                                                                <%}%>   
                                                         </div>
                                                         <%}%> 
                                                         <div class='col-6 paddig_0_l' style='text-align: left;'>
@@ -291,7 +310,13 @@
                                                             </a>
                                                         </div>
                                                         <div class='offset-1 row'>
-                                                            <h5 class='kt-font-io-n'>Lezione <%=lez.getLezione()%></h5>
+                                                            <h5 class='kt-font-io-n'>Modulo <%=lez.getUd1()%>
+                                                                <%if (temp != null) {%>
+                                                                <%if (temp.getTipolez().equals("F")) {%>
+                                                                (FAD)
+                                                                <%}%>
+                                                                <%}%>
+                                                            </h5>
                                                         </div>
                                                     </div>
                                                 </div>

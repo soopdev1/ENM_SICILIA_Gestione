@@ -48,6 +48,7 @@
             break;
         case "downloadModelli.jsp":
         case "downloadModelliFS.jsp":
+        case "downloadModelliPR.jsp":
             cloud = "kt-menu__item--open kt-menu__item--here";
             break;
         case "saFAQ.jsp":

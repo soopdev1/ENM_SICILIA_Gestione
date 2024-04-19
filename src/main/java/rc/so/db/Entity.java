@@ -151,7 +151,7 @@ public class Entity {
     }
 
     public TipoDoc_Allievi getTipoDoc_Allievi(String id) {
-        return this.em.find(TipoDoc_Allievi.class, Long.parseLong(id));
+        return this.em.find(TipoDoc_Allievi.class, Long.valueOf(id));
     }
 
     public String getPath(String id) {
@@ -176,7 +176,6 @@ public class Entity {
             out.add(new Item(r, r, ""));
         }
         return out;
-
     }
 
     public List<Item> listaComuni_totale() {
@@ -959,6 +958,12 @@ public class Entity {
 
     public List<Presenze_Lezioni_Allievi> getPresenzeLezioniAllievi_PR(Allievi allievo) {
         TypedQuery<Presenze_Lezioni_Allievi> q = this.em.createNamedQuery("presenzelezioni.allievo", Presenze_Lezioni_Allievi.class);
+        q.setParameter("allievo", allievo);
+        return q.getResultList();
+    }
+    
+    public List<Presenze_Lezioni_Allievi> getPresenzeLezioniAllievi(Allievi allievo) {
+        TypedQuery<Presenze_Lezioni_Allievi> q = this.em.createNamedQuery("presenzelezioni.allievototal", Presenze_Lezioni_Allievi.class);
         q.setParameter("allievo", allievo);
         return q.getResultList();
     }

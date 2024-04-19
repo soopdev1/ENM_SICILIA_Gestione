@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.io.File;
 import rc.so.db.Action;
 import static rc.so.db.Action.insertTR;
 import rc.so.db.Database;
@@ -47,6 +48,7 @@ import static rc.so.util.Utility.writeJsonResponseR;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,6 +59,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.json.JSONArray;
@@ -395,7 +398,7 @@ public class QueryMicro extends HttpServlet {
             Allievi a = e.getEm().find(Allievi.class, Long.valueOf(request.getParameter("idallievo")));
             DateTime oggi = new DateTime().withMillisOfDay(0);
             List<Presenze_Lezioni_Allievi> presenze_t = new ArrayList<>();
-            List<Presenze_Lezioni_Allievi> presenze_pr = e.getPresenzeLezioniAllievi_PR(a);
+            List<Presenze_Lezioni_Allievi> presenze_pr = e.getPresenzeLezioniAllievi(a);
             Database db = new Database(false);
             List<Presenze_Lezioni_Allievi> presenze_fad = db.presenze_fad(a.getId());
             db.closeDB();
@@ -457,20 +460,133 @@ public class QueryMicro extends HttpServlet {
                             FUTURE.setConvalidata(false);
                             FUTURE.setTipolez("IN FAD");
                             FUTURE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+
                             presenze_t.add(FUTURE);
                         } else {
                             Presenze_Lezioni_Allievi pla = presenze_fad.stream().filter(p1 -> p1.getDatalezione().equals(temp.getGiorno())).findAny().orElse(null);
                             if (pla == null) {
+
+                                Presenze_Lezioni_Allievi assenzagiainserita = presenze_pr.stream().filter(p1
+                                        -> new DateTime(p1.getDatainserimento()).withMillisOfDay(0).isEqual(new DateTime(temp.getGiorno()).withMillisOfDay(0))).findAny().orElse(null);
+
                                 Presenze_Lezioni_Allievi ASSENTE = new Presenze_Lezioni_Allievi();
                                 ASSENTE.setDatalezione(temp.getGiorno());
                                 ASSENTE.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
                                 ASSENTE.setOrainizio(temp.getOrainizio());
                                 ASSENTE.setOrafine(temp.getOrafine());
                                 ASSENTE.setDurata(0L);
-                                ASSENTE.setDurataconvalidata(0L);
-                                ASSENTE.setConvalidata(false);
+                                if (assenzagiainserita != null) {
+                                    ASSENTE.setDurataconvalidata(assenzagiainserita.getDurataconvalidata());
+                                    ASSENTE.setConvalidata(true);
+                                } else {
+                                    ASSENTE.setDurataconvalidata(0L);
+                                    ASSENTE.setConvalidata(false);
+                                }
                                 ASSENTE.setTipolez("IN FAD");
                                 ASSENTE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                                ASSENTE.setAllievo(a);
+                                presenze_t.add(ASSENTE);
+                            } else {
+                                pla.setIdpresenzelezioniallievi(temp.getId());
+                                pla.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
+                                pla.setTipolez("IN FAD");
+                                pla.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                                presenze_t.add(pla);
+                            }
+                        }
+                        fadgiàinserite.add(temp.getGiorno());
+                    }
+                }
+            }
+
+            List<LezioneCalendario> lezioniCalendario4 = e.getLezioniByModello(4);
+
+            ModelliPrg m4 = Utility.filterModello4(a.getProgetto().getModelli());
+            List<Lezioni_Modelli> lezioni4 = m4.getLezioni();
+
+            for (LezioneCalendario lez : lezioniCalendario4) {
+                Lezioni_Modelli temp = Utility.lezioneFilteredByGroup(lezioni4, lez.getId(), a.getGruppo_faseB());
+                if (temp == null) {
+                    continue;
+                }
+                if (!temp.getTipolez().equals("F")) {
+                    Presenze_Lezioni pl1 = e.getPresenzeLezione(temp.getId());
+                    if (pl1 == null) {
+                        Presenze_Lezioni_Allievi NONINSERITA = new Presenze_Lezioni_Allievi();
+                        NONINSERITA.setDatalezione(temp.getGiorno());
+                        NONINSERITA.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
+                        NONINSERITA.setDurata(-10000L);
+                        NONINSERITA.setDurataconvalidata(-10000L);
+                        NONINSERITA.setOrainizio(temp.getOrainizio());
+                        NONINSERITA.setOrafine(temp.getOrafine());
+                        NONINSERITA.setConvalidata(false);
+                        NONINSERITA.setTipolez("IN PRESENZA");
+                        NONINSERITA.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                        presenze_t.add(NONINSERITA);
+                    } else {
+                        Presenze_Lezioni_Allievi pla = presenze_pr.stream().filter(p1
+                                -> p1.getPresenzelezioni() != null && p1.getPresenzelezioni().getIdpresenzelezioni()
+                                .equals(pl1.getIdpresenzelezioni())).findAny().orElse(null);
+                        if (pla == null) {
+                            Presenze_Lezioni_Allievi ASSENTE = new Presenze_Lezioni_Allievi();
+                            ASSENTE.setDatalezione(pl1.getDatalezione());
+                            ASSENTE.setModulo(pl1.getLezioneriferimento().getLezione_calendario().getUnitadidattica().getCodice());
+                            ASSENTE.setDurata(0L);
+                            ASSENTE.setDurataconvalidata(0L);
+                            ASSENTE.setConvalidata(false);
+                            ASSENTE.setTipolez("IN PRESENZA");
+                            ASSENTE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                            presenze_t.add(ASSENTE);
+                        } else {
+                            pla.setModulo(pl1.getLezioneriferimento().getLezione_calendario().getUnitadidattica().getCodice());
+                            pla.setDatalezione(pl1.getDatalezione());
+                            pla.setTipolez("IN PRESENZA");
+                            pla.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                            presenze_t.add(pla);
+                        }
+                    }
+                } else {
+                    if (!fadgiàinserite.contains(temp.getGiorno())) {
+                        if (temp.getGiorno().equals(oggi.toDate()) || temp.getGiorno().after(oggi.toDate())) {
+                            Presenze_Lezioni_Allievi FUTURE = new Presenze_Lezioni_Allievi();
+                            FUTURE.setDatalezione(temp.getGiorno());
+                            FUTURE.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
+                            FUTURE.setDurata(-10000L);
+                            FUTURE.setDurataconvalidata(-10000L);
+                            FUTURE.setOrainizio(temp.getOrainizio());
+                            FUTURE.setOrafine(temp.getOrafine());
+                            FUTURE.setConvalidata(false);
+                            FUTURE.setTipolez("IN FAD");
+                            FUTURE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+
+                            presenze_t.add(FUTURE);
+                        } else {
+                            Presenze_Lezioni_Allievi pla = presenze_fad.stream().filter(p1
+                                    -> p1.getDatalezione().equals(temp.getGiorno())).findAny()
+                                    .orElse(null);
+                            if (pla == null) {
+
+                                Presenze_Lezioni_Allievi assenzagiainserita = presenze_pr.stream().filter(p1
+                                        -> new DateTime(p1.getDatainserimento()).withMillisOfDay(0)
+                                                .isEqual(new DateTime(temp.getGiorno()).withMillisOfDay(0)))
+                                        .findAny().orElse(null);
+
+                                Presenze_Lezioni_Allievi ASSENTE = new Presenze_Lezioni_Allievi();
+                                ASSENTE.setDatalezione(temp.getGiorno());
+                                ASSENTE.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
+                                ASSENTE.setOrainizio(temp.getOrainizio());
+                                ASSENTE.setOrafine(temp.getOrafine());
+                                ASSENTE.setDurata(0L);
+                                if (assenzagiainserita != null) {
+                                    ASSENTE.setDurataconvalidata(assenzagiainserita.getDurataconvalidata());
+                                    ASSENTE.setConvalidata(true);
+                                } else {
+                                    ASSENTE.setDurataconvalidata(0L);
+                                    ASSENTE.setConvalidata(false);
+                                }
+                                ASSENTE.setTipolez("IN FAD");
+                                ASSENTE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                                ASSENTE.setAllievo(a);
                                 presenze_t.add(ASSENTE);
                             } else {
                                 pla.setModulo(temp.getLezione_calendario().getUnitadidattica().getCodice());
@@ -480,11 +596,11 @@ public class QueryMicro extends HttpServlet {
                             }
                         }
                         fadgiàinserite.add(temp.getGiorno());
-//                        System.out.println("rc.so.servlet.QueryMicro.getPresenzeAllievo() " + temp.getGiorno());
                     }
                 }
             }
 
+//            System.out.println(presenze_t);
             writeJsonResponse(response, presenze_t);
         } catch (Exception ex) {
             insertTR("E", String.valueOf(((User) request.getSession().getAttribute("user")).getId()), estraiEccezione(ex));
@@ -500,13 +616,20 @@ public class QueryMicro extends HttpServlet {
             Allievi a = e.getEm().find(Allievi.class, Long.valueOf(request.getParameter("idallievo")));
             List<Documenti_Allievi> docs = e.getDocAllievo(a);
             MascheraM5 m5_allievo = e.getM5_byAllievo(a);
-            if (m5_allievo != null && m5_allievo.getDomanda_ammissione() != null) {
-                TipoDoc_Allievi dA = new TipoDoc_Allievi();
-                dA.setDescrizione("DOMANDA AMMISSIONE");
-                dA.setEstensione("pdf");
-                dA.setMimetype("application/pdf");
-                Documenti_Allievi domandaAmmissione = new Documenti_Allievi(m5_allievo.getDomanda_ammissione(), dA, null, a);
-                docs.add(domandaAmmissione);
+            if (m5_allievo != null) {
+
+                if (m5_allievo.isBusinessplan_presente()) {
+                    File bp = new File(m5_allievo.getBusinessplan_path());
+                    if (bp.exists() && bp.canRead()) {
+                        TipoDoc_Allievi dA = new TipoDoc_Allievi();
+                        dA.setDescrizione("BUSINESS PLAN");
+                        dA.setEstensione(FilenameUtils.getExtension(bp.getName()));
+                        dA.setMimetype(Files.probeContentType(bp.toPath()));
+                        Documenti_Allievi domandaAmmissione = new Documenti_Allievi(m5_allievo.getBusinessplan_path(), dA, null, a);
+                        docs.add(domandaAmmissione);
+                    }
+                }
+
             }
             ObjectMapper mapper = new ObjectMapper();
             response.getWriter().write(mapper.writeValueAsString(docs));
@@ -819,17 +942,17 @@ public class QueryMicro extends HttpServlet {
 
     protected void getChecklistfinale(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Entity e = new Entity();
-        ProgettiFormativi d = e.getEm().find(ProgettiFormativi.class, Long.parseLong(request.getParameter("pf")));
+        ProgettiFormativi d = e.getEm().find(ProgettiFormativi.class, Long.valueOf(request.getParameter("pf")));
 
         JSONArray array = new JSONArray();
         JSONObject item;
         MascheraM5 m5;
         for (Allievi a : d.getAllievi()) {
             m5 = e.getM5_byAllievo(a);
-            if (m5 != null && m5.getDomanda_ammissione() != null) {
+            if (m5 != null) {
                 item = new JSONObject();
                 item.put("id", a.getId());
-                item.put("da", m5.getDomanda_ammissione());
+                item.put("bp", m5.getBusinessplan_path());
                 array.put(item);
             }
         }
@@ -837,7 +960,6 @@ public class QueryMicro extends HttpServlet {
         Map mr = new HashMap();
         mr.put("cl", d.getChecklist_finale());
         mr.put("allievi", array.toString());
-
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(mr);
         response.getWriter().write(json);
@@ -872,41 +994,76 @@ public class QueryMicro extends HttpServlet {
         if (us != null && (us.getTipo() == 2 || us.getTipo() == 5)) {
             String type = request.getParameter("type");
             switch (type) {
-                case "getPresenzeAllievo" -> getPresenzeAllievo(request, response);
-                case "verificaassegnazione" -> verificaassegnazione(request, response);
-                case "generatecip" -> generatecip(request, response);
-                case "searchSA" -> searchSA(request, response);
-                case "nuoviSA" -> searchnuoviSA(request, response);
-                case "searchAllievo" -> searchAllievo(request, response);
-                case "searchdaAssegnare" -> searchdaAssegnare(request, response);
-                case "searchDocenti" -> searchDocenti(request, response);
-                case "searchProgetti" -> searchProgetti(request, response);
-                case "searchProgettiDocente" -> searchProgettiDocente(request, response);
-                case "searchAllieviProgetti" -> searchAllieviProgetti(request, response);
-                case "searchMappaAllievi" -> searchMappaAllievi(request, response);
-                case "searchSedi" -> searchSedi(request, response);
-                case "getDocPrg" -> getDocPrg(request, response);
-                case "getStoryPrg" -> getStoryPrg(request, response);
-                case "getDocAllievo" -> getDocAllievo(request, response);
-                case "getDocAllievoAgg" -> getDocAllievoAgg(request, response);
-                case "searchDocentiProgetti" -> searchDocentiProgetti(request, response);
-                case "getRendicontazioni" -> getRendicontazioni(request, response);
-                case "getPec" -> getPec(request, response);
-                case "getConversationSA" -> getConversationSA(request, response);
-                case "geFaqAnswer" -> geFaqAnswer(request, response);
-                case "getTipoFaq" -> getTipoFaq(request, response);
-                case "getFaq" -> getFaq(request, response);
-                case "getMyConference" -> getMyConference(request, response);
-                case "getFAD" -> getFAD(request, response);
-                case "searchActivity" -> searchActivity(request, response);
-                case "getDocente" -> getDocente(request, response);
-                case "searchCpiUser" -> searchCpiUser(request, response);
-                case "searchUnitaDidattiche" -> searchUnitaDidattiche(request, response);
-                case "getAllieviByPrg" -> getAllieviByPrg(request, response);
-                case "getLezioniByProgetto" -> getLezioniByProgetto(request, response);
-                case "getAllieviByProgetto" -> getAllieviByProgetto(request, response);
-                case "getChecklistfinale" -> getChecklistfinale(request, response);
-                case "getSIGMA" -> getSIGMA(request, response);
+                case "getPresenzeAllievo" ->
+                    getPresenzeAllievo(request, response);
+                case "verificaassegnazione" ->
+                    verificaassegnazione(request, response);
+                case "generatecip" ->
+                    generatecip(request, response);
+                case "searchSA" ->
+                    searchSA(request, response);
+                case "nuoviSA" ->
+                    searchnuoviSA(request, response);
+                case "searchAllievo" ->
+                    searchAllievo(request, response);
+                case "searchdaAssegnare" ->
+                    searchdaAssegnare(request, response);
+                case "searchDocenti" ->
+                    searchDocenti(request, response);
+                case "searchProgetti" ->
+                    searchProgetti(request, response);
+                case "searchProgettiDocente" ->
+                    searchProgettiDocente(request, response);
+                case "searchAllieviProgetti" ->
+                    searchAllieviProgetti(request, response);
+                case "searchMappaAllievi" ->
+                    searchMappaAllievi(request, response);
+                case "searchSedi" ->
+                    searchSedi(request, response);
+                case "getDocPrg" ->
+                    getDocPrg(request, response);
+                case "getStoryPrg" ->
+                    getStoryPrg(request, response);
+                case "getDocAllievo" ->
+                    getDocAllievo(request, response);
+                case "getDocAllievoAgg" ->
+                    getDocAllievoAgg(request, response);
+                case "searchDocentiProgetti" ->
+                    searchDocentiProgetti(request, response);
+                case "getRendicontazioni" ->
+                    getRendicontazioni(request, response);
+                case "getPec" ->
+                    getPec(request, response);
+                case "getConversationSA" ->
+                    getConversationSA(request, response);
+                case "geFaqAnswer" ->
+                    geFaqAnswer(request, response);
+                case "getTipoFaq" ->
+                    getTipoFaq(request, response);
+                case "getFaq" ->
+                    getFaq(request, response);
+                case "getMyConference" ->
+                    getMyConference(request, response);
+                case "getFAD" ->
+                    getFAD(request, response);
+                case "searchActivity" ->
+                    searchActivity(request, response);
+                case "getDocente" ->
+                    getDocente(request, response);
+                case "searchCpiUser" ->
+                    searchCpiUser(request, response);
+                case "searchUnitaDidattiche" ->
+                    searchUnitaDidattiche(request, response);
+                case "getAllieviByPrg" ->
+                    getAllieviByPrg(request, response);
+                case "getLezioniByProgetto" ->
+                    getLezioniByProgetto(request, response);
+                case "getAllieviByProgetto" ->
+                    getAllieviByProgetto(request, response);
+                case "getChecklistfinale" ->
+                    getChecklistfinale(request, response);
+                case "getSIGMA" ->
+                    getSIGMA(request, response);
                 default -> {
                 }
             }

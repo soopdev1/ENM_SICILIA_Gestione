@@ -226,6 +226,113 @@ var DatatablesAllievi = function () {
         });
     };
 
+
+    var initTablePresenzeAllievi = function () {
+        var table = $('#kt_table_presenzaallievi');
+        table.DataTable({
+            dom: `<'row'<'col-sm-12'ftr>><'row'<'col-sm-12 col-md-2'i><'col-sm-12 col-md-10 dataTables_pager'lp>>`,
+            lengthMenu: [15, 25, 50],
+            language: {
+                "lengthMenu": "Mostra _MENU_",
+                "infoEmpty": "Mostrati 0 di 0 per 0",
+                "loadingRecords": "Caricamento...",
+                "search": "Cerca:",
+                "zeroRecords": "Nessun risultato trovato",
+                "info": "Mostrati _END_ di _TOTAL_ ",
+                "emptyTable": "Nessun risultato",
+                "sInfoFiltered": "(filtrato su _MAX_ risultati totali)"
+            },
+            scrollX: true,
+            sScrollXInner: "100%",
+            order: [],
+            columns: [
+                {data: 'fase'},
+                {data: 'datalezione'},
+                {data: 'tipolez'},
+                {defaultContent: ''},
+                {data: 'durata'},
+                {data: 'convalidata'}
+            ],
+            drawCallback: function () {
+                $('[data-toggle="kt-tooltip"]').tooltip();
+            },
+            columnDefs: [
+                {
+                    targets: 1,
+                    type: 'date-it',
+                    render: function (data, type, row, meta) {
+                        return formattedDate(new Date(data));
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, row, meta) {
+                        return row.orainizio + " - " + row.orafine;
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, row, meta) {
+                        if (data < 0) {
+                            return "NON DISPONIBILE";
+                        } else if (data === 0) {
+                            return "ASSENTE";
+                        } else {
+                            var st1 = Number(data / 3600000).toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "");
+                            return st1;
+                        }
+                    }
+                },
+                {
+                    targets: 5,
+                    render: function (data, type, row, meta) {
+                        if (data) {
+                            if (row.durataconvalidata > 10) {
+                                var st1 = Number(row.durataconvalidata / 3600000).toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "");
+                                return st1;
+                            } else if (row.durataconvalidata === -1) {
+                                return "ASSENTE";
+                            } else if (row.durataconvalidata === 0) {
+                                return "ASSENTE";
+                            } else {
+                                return row.durataconvalidata;
+                            }
+                        } else {
+                            if (row.durata < 0) {
+                                return "";
+                            } else {
+
+                                var idselect = "presenzeconvalidate_0_" + row.idpresenzelezioniallievi;
+                                if (row.tipolez === "IN FAD") {
+                                    idselect = "presenzeconvalidate_1_" + row.allievo.id;
+                                }
+                                var select = "<select class='form-control kt-select2-general' id='" + idselect + "' name='presenzeconvalidate' style='width: 100%'>";
+                                select += "<option value='0'>ASSENZA</option>";
+                                for (var i = 0.5; i < 8.5; i = i + 0.5) {
+                                    if (i <= row.durata / 3600000) {
+                                        select += "<option value='" + i + "'>" + Number(i + "").toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "") + "</option>";
+                                    }
+                                }
+                                select = select + "</select>";
+
+                                if (row.tipolez === "IN FAD") {
+                                    var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
+                                            + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.allievo.id + ",1," + row.datalezione + ");' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
+                                    return div;
+                                } else {
+                                    var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
+                                            + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.idpresenzelezioniallievi + ",0,0);' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
+                                    return div;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
     var initTableAllievi = function () {
         var table = $('#kt_table_allievi');
         table.DataTable({
@@ -269,8 +376,11 @@ var DatatablesAllievi = function () {
                                 + '</button>'
                                 + '<div class="dropdown-menu dropdown-menu-left">';
                         option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalDocumentAllievo(' + row.id + ');"><i class="fa fa-file-alt"></i> Visualizza Documenti</a>';
-                        option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalPresenzeAllievo(' + row.id + ');"><i class="fa fa-calendar-alt"></i> Visualizza Presenze</a>';
+                        if (row.statopartecipazione.id === "9" || row.statopartecipazione.id === "11" || row.statopartecipazione.id === "16") {
 
+                        } else {
+                            option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalPresenzeAllievo(' + row.id + ');"><i class="fa fa-calendar-alt"></i> Visualizza Presenze</a>';
+                        }
 //                        if (row.statopartecipazione.id === "15") {
                         option += '<a class="dropdown-item " href="javascript:void(0);" onclick="swalSigma(' + row.id + ',\'' + row.statopartecipazione.id +
                                 '\')"><i class="fa fa-user-check" data-container="body" data-html="true" data-toggle="kt-tooltip" title="Stato '
@@ -391,9 +501,24 @@ var DatatablesAllievi = function () {
             initTableAllievi();
             initMappaAllievi();
             initPdfAllievi();
+            initTablePresenzeAllievi();
         }
     };
 }();
+
+function swalPresenzeAllievo(idallievo) {
+    clear_table($('#kt_table_presenzaallievi'));
+    load_table($('#kt_table_presenzaallievi'),
+            context + '/QueryMicro?type=getPresenzeAllievo&idallievo=' + idallievo);
+    $('#allievi_presenze_table').modal('show');
+    $('#allievi_presenze_table').on('shown.bs.modal', function () {
+        $('.kt-scroll').each(function () {
+            const ps = new PerfectScrollbar($(this)[0]);
+        });
+        $('#kt_table_presenzaallievi').DataTable().columns.adjust();
+        $(".dataTables_scrollHead").css("overflow", "visible");
+    });
+}
 
 function swalSigma(id, idsp) {
     swal.fire({
@@ -599,131 +724,7 @@ function swalDocumentPrg(idprogetto) {
 
 var registri = new Map();
 
-function swalPresenzeAllievo(idallievo) {
-    swal.fire({
-        html: '<table class="table table-bordered" id="kt_table_presenzaallievi">'
-                + '<thead>'
-                + '<tr>'
-                + '<th class="text-uppercase text-center">FASE</th>'
-                + '<th class="text-uppercase text-center">DATA</th>'
-                + '<th class="text-uppercase text-center">TIPO LEZIONE</th>'
-                + '<th class="text-uppercase text-center">ORARIO PRESENZA</th>'
-                + '<th class="text-uppercase text-center">ORE</th>'
-                + '<th class="text-uppercase text-center">ORE CONVALIDATE</th>'
-                + '</tr>'
-                + '</thead>'
-                + '</table>',
-        width: '100%',
-        grow: 'fullscreen',
-        scrollbarPadding: true,
-        showCloseButton: true,
-        showCancelButton: false,
-        showConfirmButton: false,
-        onOpen: function () {
-            $("#kt_table_presenzaallievi").DataTable({
-                dom: `<'row'<'col-sm-12'ftr>><'row'<'col-sm-12 col-md-2'><'col-sm-12 col-md-10'>>`,
-                lengthMenu: [50],
-                language: {
-                    "lengthMenu": "Mostra _MENU_",
-                    "infoEmpty": "Mostrati 0 di 0 per 0",
-                    "loadingRecords": "Caricamento...",
-                    "search": "Cerca:",
-                    "zeroRecords": "Nessun risultato trovato",
-                    "info": "Mostrati _END_ di _TOTAL_ ",
-                    "emptyTable": "Nessun risultato",
-                    "sInfoFiltered": "(filtrato su _MAX_ risultati totali)"
-                },
-                processing: true,
-                serverSide: true,
-                ajax: context + '/QueryMicro?type=getPresenzeAllievo&idallievo=' + idallievo,
-                order: [],
-                columns: [
-                    {data: 'fase'},
-                    {data: 'datalezione'},
-                    {data: 'tipolez'},
-                    {defaultContent: ''},
-                    {data: 'durata'},
-                    {data: 'convalidata'}
-                ],
-                columnDefs: [
-                    {
-                        targets: 1,
-                        type: 'date-it',
-                        render: function (data, type, row, meta) {
-                            return formattedDate(new Date(data));
-                        }
-                    },
-                    {
-                        targets: 3,
-                        render: function (data, type, row, meta) {
-                            return row.orainizio + " - " + row.orafine;
-                        }
-                    },
-                    {
-                        targets: 4,
-                        render: function (data, type, row, meta) {
-                            if (data < 0) {
-                                return "NON INSERITA";
-                            } else if (data === 0) {
-                                return "ASSENTE";
-                            } else {
-                                var st1 = Number(data / 3600000).toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "");
-                                return st1;
-                            }
-                        }
-                    },
-                    {
-                        targets: 5,
-                        render: function (data, type, row, meta) {
-                            if (data) {
-                                if (row.durataconvalidata > 10) {
-                                    var st1 = Number(row.durataconvalidata / 3600000).toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "");
-                                    return st1;
-                                } else if (row.durataconvalidata === -1) {
-                                    return "ASSENZA NON GIUSTIFICATA";
-                                } else if (row.durataconvalidata === 0) {
-                                    return "ASSENZA GIUSTIFICATA";
-                                } else {
-                                    return row.durataconvalidata;
-                                }
-                            } else {
-                                if (row.durata < 0) {
-                                    return "";
-                                } else {
 
-                                    var idselect = "presenzeconvalidate_0_" + row.idpresenzelezioniallievi;
-                                    if (row.tipolez === "IN FAD") {
-                                        idselect = "presenzeconvalidate_1_" + row.allievo.id;
-                                    }
-                                    var select = "<select class='form-control kt-select2-general' id='" + idselect + "' name='presenzeconvalidate' style='width: 100%'>";
-                                    select += "<option value='-1'>ASSENZA NON GIUSTIFICATA</option>";
-                                    select += "<option value='0'>ASSENZA GIUSTIFICATA</option>";
-                                    for (var i = 0.5; i < 8.5; i = i + 0.5) {
-                                        if (i <= row.durata / 3600000) {
-                                            select += "<option value='" + i + "'>" + Number(i + "").toLocaleString("it-IT", {minimumFractionDigits: 1}).replace(/[.,]0$/, "") + "</option>";
-                                        }
-                                    }
-                                    select = select + "</select>";
-
-                                    if (row.tipolez === "IN FAD") {
-                                        var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
-                                                + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.allievo.id + ",1," + row.datalezione + ");' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
-                                        return div;
-                                    } else {
-                                        var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
-                                                + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.idpresenzelezioniallievi + ",0,0);' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
-                                        return div;
-                                    }
-
-                                }
-                            }
-                        }
-                    }
-                ]
-            });
-        }
-    });
-}
 
 
 function validatepresenze(idpresenza, tipo, datalez) {

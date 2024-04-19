@@ -10,7 +10,7 @@ let allievi_fa = new Map();
 let allievi_fb = new Map();
 let allievi_mappati = new Map();
 let allievi_outputs = new Map();
-let allievi_domanda = new Map();
+let allievi_bp = new Map();
 
 function completeOre(hh, max) {
     hh = hh.replaceAll("_", "").replace(",", ".");
@@ -256,14 +256,12 @@ function step3_load(dati) {
     let tempID = 0;
     $('a[id^=ammissione_]').each(function () {
         tempID = Number(this.id.split("_")[1]);
-        if (typeof (allievi_domanda.get(tempID)) !== 'undefined') {
-            $(this).attr("href", context + '/OperazioniGeneral?type=showDoc&path=' + allievi_domanda.get(tempID));
-            $(this).attr("data-original-title", "<h5>Visualizza domanda d'ammissione</h5>");
+        if (typeof (allievi_bp.get(tempID)) !== 'undefined') {
+            $(this).attr("href", context + '/OperazioniGeneral?type=showDoc&path=' + allievi_bp.get(tempID));
+            $(this).attr("data-original-title", "<h5>Visualizza Business Plan</h5>");
             $(this).addClass("btn-success");
-            $(this).html("<i class='fa fa-file-pdf'></i>Domanda d'ammissione");
-
+            $(this).html("<i class='fa fa-file-pdf'></i>Business Plan");
             $('#output_' + tempID).attr('disabled', false);
-
             if (allievi_outputs.get(tempID.toString()) === "1") {
                 $('#output_' + tempID).attr('checked', 'checked');
             } else {
@@ -272,10 +270,9 @@ function step3_load(dati) {
             $('#output_' + tempID).addClass("daoutput");
         } else {
             $(this).removeAttr("href");
-            $(this).attr("data-original-title", "<h5>Domanda d'ammissione assente, mappatura non disponibile</h5>");
+            $(this).attr("data-original-title", "<h5>Business Plan non caricato</h5>");
             $(this).addClass("btn-danger").removeClass("daoutput");
-            $(this).html("<i class='fa fa-times'></i> Domanda d'ammissione");
-
+            $(this).html("<i class='fa fa-times'></i> Business Plan");
             $('#output_' + tempID).attr('disabled', true);
             $('#output_' + tempID).removeAttr('checked');
             $('#output_' + tempID);
@@ -566,7 +563,7 @@ function load_Checklist() {
         allievi_fb = new Map(JSON.parse(ret.cl.tab_neet_fb).map(i => [i.id, i.ore]));
     }
     if (ret.allievi !== null && ret.allievi !== "") {
-        allievi_domanda = new Map(JSON.parse(ret.allievi).map(i => [i.id, i.da]));
+        allievi_bp = new Map(JSON.parse(ret.allievi).map(i => [i.id, i.bp]));
     }
     if (ret.cl !== null && ret.cl !== "" && ret.cl.tab_mappatura_neet !== null && ret.cl.tab_mappatura_neet !== "") {
         allievi_mappati = new Map(JSON.parse(ret.cl.tab_mappatura_neet).map(i => [i.id, i.mappato]));

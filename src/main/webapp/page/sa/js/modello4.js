@@ -412,12 +412,12 @@ function uploadLezione(idprogetto, idm, idl, grp, ud, sedefisica) {
                 daysOfWeekDisabled: [0]
             });
 
-            
-                $('#orario1_start').val(orario_default_start);
-                $('#orario1_end').val(orario_default_end);
-                $('#orario1_start').timepicker("setTime", orario_default_start);
-                $('#orario1_end').timepicker("setTime", orario_default_end);
-            
+
+            $('#orario1_start').val(orario_default_start);
+            $('#orario1_end').val(orario_default_end);
+            $('#orario1_start').timepicker("setTime", orario_default_start);
+            $('#orario1_end').timepicker("setTime", orario_default_end);
+
 
             $('#giorno').val(formattedDate(days[2]));
             $("#giorno").datepicker("update");
@@ -466,11 +466,11 @@ function uploadLezione(idprogetto, idm, idl, grp, ud, sedefisica) {
                     $("#sedefisica").append('<option selected value="' + json.id + '">' + json.denominazione + " : " + json.indirizzo + " - " + json.comune.nome + '</option>');
                 });
             }
-            
-                $("#tipolez").append('<option value="F">IN FAD</option>');
-                $("#tipolez").append('<option value="P">IN PRESENZA</option>');
 
-            
+            $("#tipolez").append('<option value="F">IN FAD</option>');
+            $("#tipolez").append('<option value="P">IN PRESENZA</option>');
+
+
 
             if ($('#tipolez').val() === "P") {
                 $('#sedefisica_label').css("display", "");
@@ -715,7 +715,9 @@ function buttonsControl(lezioni, calendario, gruppo) {
     }
     cssPage(nrolezioni, gruppo);
     maplezioniD = new Map();
-    maplezioniD = new Map(filterAndGroupByG(tempLezioni, gruppo).map(i => [i.id, moment(new Date(i.giorno)).format("DD-MM-YYYY") + " ( Modulo " + i.lezione_calendario.ud1 + ")"]));
+    maplezioniD = new Map(filterAndGroupByG(tempLezioni, gruppo).map(i => 
+    [i.id, moment(new Date(i.giorno)).format("DD-MM-YYYY") 
+                + " ( Modulo " + i.lezione_calendario.ud1 + ")"]));
     if (maplezioniD.size > 0) {
         lessonsEditable = true;
         $('#deleteByGroup_' + gruppo).removeAttr('disabled');
@@ -746,7 +748,8 @@ function loadLezioni() {
 
 function filterAndGroupByG(options, group) {
     return options.reduce(function (res, option) {
-        if (new Date(new Date(option.giorno).toDateString()) >= today && option.gruppo_faseB === group && res.filter(e => e.giorno === option.giorno).length === 0) {
+        if (new Date(new Date(option.giorno).toDateString()) >= today 
+                && option.gruppo_faseB === parseInt(group) && res.filter(e => e.giorno === option.giorno).length === 0) {
             res.push(option);
         }
         return res;
@@ -917,7 +920,7 @@ function showLezioneSingle(idlezione, l, grp, ud, sedefisica) {
             popup: 'animated bounceInUp'
         },
         onOpen: function () {
-            
+
             $("#alertmsg_day").html("La modifica è disabilitata in quanto la data della lezione è antecedente ad oggi.");
             $("#warning_day").show();
             $("#tot_hh1").html('Totale ore di lezione da effettuare : <b>' + lez.lezione_calendario.ore + '</b>');
@@ -927,11 +930,11 @@ function showLezioneSingle(idlezione, l, grp, ud, sedefisica) {
             $('#orario1_end').val(lez.orafine);
             $('#giorno').val(formattedDate(new Date(lez.giorno)));
             $('#docente').val(lez.docente.nome + " " + lez.docente.cognome);
-            
-            
-            
-            
-            
+
+
+
+
+
         }
     });
 }
@@ -973,6 +976,12 @@ function showLezioneDouble(idlezione1, idlezione2, l, grp) {
 }
 
 $('#createGroups').on("click", function () {
+
+    allievi_total = getNeets("no");
+
+
+
+
     let allievi_ok = allievi_total.filter(al => al.gruppo_faseB !== -1);
     let diff = allievi_ok.length - $("[id^=param_] :selected").length;
     let msg = diff !== 0 ? ('Attenzione, non hai selezionato <b>' + diff + '</b> allievi durante la creazione dei gruppi.<br> Se procedi, non sarà possibile una loro assegnazione successiva.')
@@ -1075,7 +1084,7 @@ function createGroups() {
     let allievi_ok = allievi_total.filter(al => al.gruppo_faseB !== -1);
 
     let mapAllievi = new Map(allievi_ok.map(i => [i.id, (i.nome + " " + i.cognome)]));
-    msg_neet_excluded = "I seguenti allievi sono stati esclusi dalla creazione dei gruppi in quanto non hanno effettuato le 36 ore durante la Fase A:<br>";
+    msg_neet_excluded = "I seguenti allievi sono stati esclusi dalla creazione dei gruppi in quanto non hanno effettuato le 48 ore durante la Fase A:<br>";
 
     let excludedPresent = false;
     for (let a of allievi_ko) {
@@ -1129,7 +1138,7 @@ function loadGroups() {
         } else {
             excludedPresent = true;
             if (a[0] === -1) {
-                msg_neet_excluded += '<b>' + a[1] + ' (36 ore non raggiunte durante la Fase A)</b><br>';
+                msg_neet_excluded += '<b>' + a[1] + ' (48 ore non raggiunte durante la Fase A)</b><br>';
             } else {
                 msg_neet_excluded += '<b>' + a[1] + '</b><br>';
             }
@@ -1379,10 +1388,11 @@ jQuery(document).ready(function () {
         disableOptions();
 
         lezioniModello4 = loadLezioni();
-        console.log(lezioniModello4);
+       // console.log(lezioniModello4);
         calendarioModello4 = loadCalendario();
 //        setDateInizioFine(lezioniModello4);
         for (let gr of numberGroups) {
+            
             buttonsControl(countLezioneEffettive(lezioniModello4, gr), mapCalendario.size, gr);
         }
         $('a.disablelink').removeAttr("onclick");

@@ -7,6 +7,7 @@ package rc.so.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
+import com.google.common.primitives.Ints;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
 import com.google.zxing.RGBLuminanceSource;
@@ -67,6 +68,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import static java.lang.Float.parseFloat;
 import static java.lang.Math.toRadians;
 import static java.lang.System.setProperty;
 import java.security.Principal;
@@ -118,6 +120,8 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.Store;
 import org.joda.time.DateTime;
+import rc.so.domain.Revisori;
+import static rc.so.util.Utility.parseDouble;
 import static rc.so.util.Utility.sd1;
 
 /**
@@ -214,7 +218,7 @@ public class Pdf_new {
 
                 if (al.getPartecipazione().equals("03")) {
                     setFieldsValue(form, fields, "dipendente", al.getDipendente().toUpperCase());
-                }else{
+                } else {
                     setFieldsValue(form, fields, "dipendente", "");
                 }
 
@@ -290,8 +294,9 @@ public class Pdf_new {
     public static File REGISTROCARTACEO(Entity e,
             String username,
             Lezioni_Modelli lm,
+            String idgruppo,
             DateTime dataconsegna) {
-        File out1 = REGISTROCARTACEO_BASE(null, e, username, lm, dataconsegna);
+        File out1 = REGISTROCARTACEO_BASE(null, e, username, lm, idgruppo, dataconsegna);
         if (out1 != null) {
             File out2 = convertPDFA(out1, "REGISTROCARTACEO", e);
             if (out2 != null) {
@@ -323,11 +328,10 @@ public class Pdf_new {
             String username,
             SoggettiAttuatori sa,
             Allievi al,
-            String[] datifrequenza,
             MascheraM5 m5,
             DateTime dataconsegna,
             boolean flatten) {
-        File out1 = MODELLO5_BASE(e, contentb64, username, sa, al, datifrequenza, m5, dataconsegna, flatten);
+        File out1 = MODELLO5_BASE(e, contentb64, username, sa, al, m5, dataconsegna, flatten);
         if (out1 != null) {
             File out2 = convertPDFA(out1, "MODELLO5", e);
             if (out2 != null) {
@@ -359,10 +363,9 @@ public class Pdf_new {
             Entity e,
             String username,
             Allievi al,
-            String orerendicontabili,
             DateTime dataconsegna,
             boolean flatten) {
-        File out1 = MODELLO7_BASE(e, username, al, orerendicontabili, dataconsegna, flatten);
+        File out1 = MODELLO7_BASE(e, username, al, dataconsegna, flatten);
         if (out1 != null) {
             File out2 = convertPDFA(out1, "MODELLO7", e);
             if (out2 != null) {
@@ -446,6 +449,7 @@ public class Pdf_new {
             Entity e,
             String username,
             Lezioni_Modelli lm,
+            String idgruppo,
             DateTime dataconsegna) {
 
         try {
@@ -493,9 +497,21 @@ public class Pdf_new {
                 }
 
                 setFieldsValue(form, fields, "DATALEZ", sdfITA.format(lm.getGiorno()));
+                setFieldsValue(form, fields, "FASE", lm.getLezione_calendario().getUnitadidattica().getFase().toUpperCase());
                 setFieldsValue(form, fields, "UDLEZ", lm.getLezione_calendario().getUnitadidattica().getDescrizione());
                 setFieldsValue(form, fields, "MODLEZ", lm.getLezione_calendario().getUnitadidattica().getCodice());
                 setFieldsValue(form, fields, "ORELEZ", roundDoubleAndFormat(lm.getLezione_calendario().getUnitadidattica().getOre()));
+
+                if (lm.getLezione_calendario().getUnitadidattica().getFase().endsWith("A") && idgruppo.equals("")) {
+                    setFieldsValue(form, fields, "DESCRFASE", lm.getLezione_calendario().getUnitadidattica().getFase().toUpperCase()
+                            + ", UD N° " + lm.getLezione_calendario().getUnitadidattica().getDescrizione()
+                            + ", MODULO " + lm.getLezione_calendario().getUnitadidattica().getCodice());
+                } else {
+                    setFieldsValue(form, fields, "DESCRFASE", lm.getLezione_calendario().getUnitadidattica().getFase().toUpperCase()
+                            + ", UD N° " + lm.getLezione_calendario().getUnitadidattica().getDescrizione()
+                            + ", MODULO " + lm.getLezione_calendario().getUnitadidattica().getCodice()
+                            + ", GRUPPO " + idgruppo);
+                }
 
                 setFieldsValue(form, fields, "DOC_COGN", lm.getDocente().getCognome().toUpperCase());
                 setFieldsValue(form, fields, "DOC_NOM", lm.getDocente().getNome().toUpperCase());
@@ -681,11 +697,8 @@ public class Pdf_new {
             TipoDoc p = e.getEm().find(TipoDoc.class, 36L);
             String contentb64 = p.getModello();
 
-            List<Allievi> allievi_faseA = Utility.allievi_fa(pf.getId(), e.getAllieviProgettiFormativi(pf));
-            List<Docenti> docenti_tab = Utility.docenti_ore_A(pf.getId(), pf.getDocenti());
-//            Map<Long, Long> oreRendicontabili_faseA = Action.OreRendicontabiliAlunni_faseA((int) (long) pf.getId());
-            Map<Long, Long> oreRendicontabili_faseB = Action.OreRendicontabiliAlunni_faseB((int) (long) pf.getId());
-            Map<Long, Long> oreRendicontabili_docenti = Action.OreRendicontabiliDocentiFASEA((int) (long) pf.getId());
+            List<Allievi> allievi_totali = e.getAllieviProgettiFormativiAll(pf);
+            List<Docenti> docenti_tab = Utility.docenti_A(e, pf);
 
             File pdfOut = new File(startpath + username + "_"
                     + getOnlyStrings(sa.getRagionesociale()) + "_"
@@ -701,11 +714,13 @@ public class Pdf_new {
                 //PAG 1
                 setFieldsValue(form, fields, "NOMESA", sa.getRagionesociale().toUpperCase());
                 setFieldsValue(form, fields, "CIP", pf.getCip());
-                setFieldsValue(form, fields, "PROT", sa.getProtocollo());
+                setFieldsValue(form, fields, "CF", sa.getCodicefiscale().toUpperCase());
+                setFieldsValue(form, fields, "PIVA", sa.getPiva().toUpperCase());
                 setFieldsValue(form, fields, "DATA", dataconsegna.toString(patternITA));
                 setFieldsValue(form, fields, "DATAINIZIO", sdfITA.format(pf.getStart()));
                 setFieldsValue(form, fields, "DATAFINE", sdfITA.format(pf.getEnd()));
-                setFieldsValue(form, fields, "TOTALE", roundDoubleAndFormat(pf.getChecklist_finale().getTot_contributo_ammesso()) + " €");
+
+                setFieldsValue(form, fields, "TOTALE", Utility.roundFloatAndFormat(parseFloat(String.valueOf(pf.getChecklist_finale().getTot_contributo_ammesso())), false) + " €");
 
                 List<OreId> list_orecontrollatefaseA = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_neet_fa(), OreId[].class));
                 List<OreId> list_orecontrollatefaseB = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_neet_fb(), OreId[].class));
@@ -713,7 +728,7 @@ public class Pdf_new {
 //                List<OutputId> list_outputfaseA = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_completezza_output_neet(), OutputId[].class));
 
                 AtomicInteger indice1 = new AtomicInteger(1);
-                allievi_faseA.forEach(al1 -> {
+                allievi_totali.forEach(al1 -> {
                     setFieldsValue(form, fields, "Cognome" + indice1.get(), al1.getCognome().toUpperCase());
                     setFieldsValue(form, fields, "Nome" + indice1.get(), al1.getNome().toUpperCase());
                     setFieldsValue(form, fields, "CF" + indice1.get(), al1.getCodicefiscale().toUpperCase());
@@ -721,13 +736,12 @@ public class Pdf_new {
                     OreId orea = list_orecontrollatefaseA.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
                     if (orea != null) {
                         setFieldsValue(form, fields, "TOTALEA" + indice1.get(),
-                                Utility.roundFloatAndFormat(Float.parseFloat(orea.getOre()), false));
+                                roundFloatAndFormat(Float.parseFloat(orea.getOre()), false));
                     }
-                    if (oreRendicontabili_faseB.get(al1.getId()) != null) {
-                        OreId oreb = list_orecontrollatefaseB.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
-                        if (oreb != null) {
-                            setFieldsValue(form, fields, "TOTALEB" + indice1.get(), roundFloatAndFormat(Float.parseFloat(oreb.getOre()), false));
-                        }
+                    OreId oreb = list_orecontrollatefaseB.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
+                    if (oreb != null) {
+                        setFieldsValue(form, fields, "TOTALEB" + indice1.get(),
+                                roundFloatAndFormat(Float.parseFloat(oreb.getOre()), false, true));
                     }
 
                     indice1.addAndGet(1);
@@ -744,23 +758,20 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "FASCIAD_A" + indice2.get(),
                             d1.getFascia().getDescrizione());
                     setFieldsValue(form, fields, "TOTALED_B" + indice2.get(),
-                            roundFloatAndFormat(oreRendicontabili_docenti.get(d1.getId()), true));
+                            roundDoubleAndFormat(d1.getOrec_faseA()));
                     indice2.addAndGet(1);
                 });
 
                 //PAG 2
                 AtomicInteger indice3 = new AtomicInteger(1);
                 list_completi.stream().filter(m1 -> m1.getOutput().equals("0")).collect(Collectors.toList()).forEach(m2 -> {
-
-                    Allievi ako = allievi_faseA.stream().filter(al1 -> String.valueOf(al1.getId()).equals(m2.getId())).findFirst().orElse(null);
-
+                    Allievi ako = allievi_totali.stream().filter(al1 -> String.valueOf(al1.getId()).equals(m2.getId())).findFirst().orElse(null);
                     if (ako != null) {
                         setFieldsValue(form, fields, "ERR_Cognome" + indice3.get(), ako.getCognome().toUpperCase());
                         setFieldsValue(form, fields, "ERR_Nome" + indice3.get(), ako.getNome().toUpperCase());
                         setFieldsValue(form, fields, "ERR_CF" + indice3.get(), ako.getCodicefiscale().toUpperCase());
                         indice3.addAndGet(1);
                     }
-
                 });
 
                 if (flatten) {
@@ -799,22 +810,18 @@ public class Pdf_new {
             TipoDoc p = e.getEm().find(TipoDoc.class, 37L);
             String contentb64 = p.getModello();
 
-            List<Allievi> allievi_totali = e.getAllieviProgettiFormativi(pf);
-            int allieviOK = Utility.allieviOK(pf.getId(), allievi_totali);
+            List<Allievi> allievi_totali = e.getAllieviProgettiFormativiAll(pf);
+            int allieviOK = Utility.allieviOK(p.getId(), allievi_totali);
 
-            List<Allievi> allievi_faseA = Utility.allievi_fa(pf.getId(), e.getAllieviProgettiFormativi(pf));
-            List<Docenti> docenti_tab = Utility.docenti_ore_A(pf.getId(), pf.getDocenti());
-            Map<Long, Long> oreRendicontabili_faseA = Action.OreRendicontabiliAlunni_faseA((int) (long) pf.getId());
-            Map<Long, Long> oreRendicontabili_faseB = Action.OreRendicontabiliAlunni_faseB((int) (long) pf.getId());
-            Map<Long, Long> oreRendicontabili_docenti = Action.OreRendicontabiliDocentiFASEA((int) (long) pf.getId());
+            List<Allievi> allievi_faseB = Utility.allievi_fb(p.getId(), e.getAllieviProgettiFormativi(pf));
+            List<Docenti> docenti_tab = Utility.docenti_A(e, pf);
             String coeff_fa = e.getPath("coeff.allievo.fasea");
             String coeff_fb = e.getPath("coeff.allievo.faseb");
+            Map<String, String> fasceDocenti = Utility.mapCoeffDocenti(e.getPath("coeff.docente.a"), e.getPath("coeff.docente.b"), e.getPath("coeff.docente.c"));
 
-            String coeff_fasciaA = e.getPath("coeff.docente.a");
-            String coeff_fasciaB = e.getPath("coeff.docente.b");
-
-//            List<Revisori> controllori = e.findAll(Revisori.class);
-            Map<String, String> fasceDocenti = Utility.mapCoeffDocenti(coeff_fasciaA, coeff_fasciaB);
+//            String coeff_fasciaA = e.getPath("coeff.docente.a");
+//            String coeff_fasciaB = e.getPath("coeff.docente.b");
+//            String coeff_fasciaC = e.getPath("coeff.docente.c");
 
             File pdfOut = new File(startpath + username + "_"
                     + getOnlyStrings(sa.getRagionesociale()) + "_"
@@ -850,58 +857,36 @@ public class Pdf_new {
                 List<OreId> list_orecontrollatefaseA = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_neet_fa(), OreId[].class));
                 List<OreId> list_orecontrollatefaseB = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_neet_fb(), OreId[].class));
 
-                List<MappaturaId> list_mappatifaseA = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_mappatura_neet(), MappaturaId[].class));
                 List<OutputId> list_outputfaseA = Arrays.asList(new ObjectMapper().readValue(pf.getChecklist_finale().getTab_completezza_output_neet(), OutputId[].class));
 
                 AtomicInteger indice1 = new AtomicInteger(1);
 
-                setFieldsValue(form, fields, "IMPORTONEETA", roundDoubleAndFormat(Double.parseDouble(coeff_fa)) + " €");
-                setFieldsValue(form, fields, "IMPORTO ORARIO RICONOSCIUTOCONTROLL O ORE PRESENZE ALLIEVI  FASE B", roundDoubleAndFormat(Double.parseDouble(coeff_fb)) + " €");
+                setFieldsValue(form, fields, "IMPORTONEETA", roundDoubleAndFormat(parseDouble(coeff_fa)) + " €");
+                setFieldsValue(form, fields, "IMPORTO ORARIO RICONOSCIUTOCONTROLL O ORE PRESENZE ALLIEVI  FASE B", roundDoubleAndFormat(parseDouble(coeff_fb)) + " €");
 
-                allievi_faseA.forEach(al1 -> {
+                allievi_totali.forEach(al1 -> {
                     setFieldsValue(form, fields, "COGNOMERow" + indice1.get(), al1.getCognome().toUpperCase());
                     setFieldsValue(form, fields, "NOMERow" + indice1.get(), al1.getNome().toUpperCase());
-                    setFieldsValue(form, fields, "ORENEETARow" + indice1.get(), roundFloatAndFormat(oreRendicontabili_faseA.get(al1.getId()), true));
-
+                    setFieldsValue(form, fields, "TIPOARow" + indice1.get(), al1.getTos_tipofinanziamento());
+                    setFieldsValue(form, fields, "ORENEETARow" + indice1.get(), roundDoubleAndFormat(al1.getOrec_fasea(), true));
+                    setFieldsValue(form, fields, "ORE PRESENZE ALLIEVI  FASE BRow" + indice1.get(), roundDoubleAndFormat(al1.getOrec_faseb(), true));
                     OreId orea = list_orecontrollatefaseA.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
                     if (orea != null) {
                         setFieldsValue(form, fields, "C_ORENEETARow" + indice1.get(),
-                                Utility.roundFloatAndFormat(Float.parseFloat(orea.getOre()), false));
-
-                        setFieldsValue(form, fields, "IMPORTONEETARow" + indice1.get(), roundDoubleAndFormat(Double.parseDouble(coeff_fa)));
-
-//                        float tota = Float.parseFloat(orea.getOre()) * Float.parseFloat(coeff_fa);
-//                        totalefasea.addAndGet(Double.parseDouble(orea.getOre()) * Double.parseDouble(coeff_fa));
-                        setFieldsValue(form, fields, "TOTALE FASE ARow" + indice1.get(), roundFloatAndFormat(Float.parseFloat(orea.getTotale()), false));
-
+                                roundDoubleAndFormat(parseDouble(orea.getOre()), true));
+                        setFieldsValue(form, fields, "IMPORTONEETARow" + indice1.get(),
+                                roundDoubleAndFormat(parseDouble(coeff_fa), true));
+                        setFieldsValue(form, fields, "TOTALE FASE ARow" + indice1.get(),
+                                roundDoubleAndFormat(parseDouble(orea.getTotale()), true));
                     }
-
-                    if (oreRendicontabili_faseB.get(al1.getId()) != null) {
-
-                        OreId oreb = list_orecontrollatefaseB.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
-
-                        if (oreb != null) {
-
-                            setFieldsValue(form, fields, "ORE PRESENZE ALLIEVI  FASE BRow" + indice1.get(),
-                                    roundFloatAndFormat(oreRendicontabili_faseB.get(al1.getId()), true));
-
-                            setFieldsValue(form, fields, "CONTROLL O ORE PRESENZE ALLIEVI  FASE BRow" + indice1.get(),
-                                    Utility.roundFloatAndFormat(Float.parseFloat(oreb.getOre()), false));
-
-                            setFieldsValue(form, fields, "IMPORTO ORARIO RICONOSCIUTORow" + (indice1.get() + 1) + "_2", roundDoubleAndFormat(Double.parseDouble(coeff_fb)));
-
-//                            float totb = Float.parseFloat(oreb.getOre()) * Float.parseFloat(coeff_fb);
-//                            totalefaseb.addAndGet(Double.parseDouble(oreb.getOre()) * Double.parseDouble(coeff_fb));
-                            setFieldsValue(form, fields, "TOTALE FASE BRow" + indice1.get(), roundFloatAndFormat(Float.parseFloat(oreb.getTotale()), false));
-
-                        }
-
-                    }
-
-                    MappaturaId map1 = list_mappatifaseA.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
-                    if (map1 != null) {
-                        String map = map1.getMappato().equalsIgnoreCase("1") ? "SI" : "NO";
-                        setFieldsValue(form, fields, "MAPPATURA IN CHIUSURARow" + indice1.get(), map);
+                    OreId oreb = list_orecontrollatefaseB.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
+                    if (oreb != null) {
+                        setFieldsValue(form, fields, "CONTROLL O ORE PRESENZE ALLIEVI  FASE BRow" + indice1.get(),
+                                roundDoubleAndFormat(parseDouble(oreb.getOre()), true));
+                        setFieldsValue(form, fields, "IMPORTO ORARIO RICONOSCIUTORow" + (indice1.get() + 1) + "_2",
+                                roundDoubleAndFormat(parseDouble(coeff_fb), true));
+                        setFieldsValue(form, fields, "TOTALE FASE BRow" + indice1.get(),
+                                roundDoubleAndFormat(parseDouble(oreb.getTotale()), true));
                     }
 
                     OutputId out1 = list_outputfaseA.stream().filter(al2 -> al2.getId().equals(String.valueOf(al1.getId()))).findAny().orElse(null);
@@ -913,16 +898,10 @@ public class Pdf_new {
                     indice1.addAndGet(1);
                 });
 
-//                setFieldsValue(form, fields, "TOTALE FASE ATOTALE CONTRIBUTO INDENNITA DI FREQUENZA  FASE A", roundDoubleAndFormat(totalefasea.get()) + " €");
-//                setFieldsValue(form, fields, "TOTALE FASE BTOTALE CONTRIBUTO FASE B", roundDoubleAndFormat(totalefaseb.get()) + " €");
                 setFieldsValue(form, fields, "TOTALE FASE ATOTALE CONTRIBUTO INDENNITA DI FREQUENZA  FASE A", roundDoubleAndFormat(pf.getChecklist_finale().getTot_contributo_indennita_frequenza_fa()) + " €");
                 setFieldsValue(form, fields, "TOTALE FASE BTOTALE CONTRIBUTO FASE B", roundDoubleAndFormat(pf.getChecklist_finale().getTot_contributo_fb()) + " €");
 
                 AtomicInteger indice2 = new AtomicInteger(1);
-
-                setFieldsValue(form, fields, "IMPORTO ORARIO RICONOSCIUTOFASCIA DI APPARTENENZA RICONOSCIUTA",
-                        "A: " + roundDoubleAndFormat(Double.parseDouble(coeff_fasciaA)) + " € B: " + roundDoubleAndFormat(Double.parseDouble(coeff_fasciaB))
-                );
 
                 docenti_tab.forEach(d1 -> {
 
@@ -930,7 +909,7 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "NOMERow" + indice2.get() + "_2", d1.getNome().toUpperCase());
 
                     setFieldsValue(form, fields, "CONTROLLO ORE PRESENZE DOCENTE  FASE ARow" + indice2.get(),
-                            roundFloatAndFormat(oreRendicontabili_docenti.get(d1.getId()), true));
+                            roundDoubleAndFormat(d1.getOrec_faseA(), true));
 
                     setFieldsValue(form, fields, "FASCIA DI APPARTENENZA RICONOSCIUTARow" + indice2.get(),
                             d1.getFascia().getDescrizione());
@@ -938,14 +917,13 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "IMPORTO ORARIO RICONOSCIUTORow" + (indice2.get() + 1) + "_3",
                             roundDoubleAndFormat(Double.parseDouble(fasceDocenti.get(d1.getFascia().getId()))));
 
-                    float tota = Float.parseFloat(convertToHours_R(oreRendicontabili_docenti.get(d1.getId())))
-                            * Float.parseFloat(fasceDocenti.get(d1.getFascia().getId()));
+                    double tota = d1.getOrec_faseA() * parseDouble(fasceDocenti.get(d1.getFascia().getId()));
 
-                    setFieldsValue(form, fields, "TOTALE FASE ARow" + indice2.get() + "_2", roundFloatAndFormat(tota, false));
+                    setFieldsValue(form, fields, "TOTALE FASE ARow" + indice2.get() + "_2",
+                            roundDoubleAndFormat(tota, true));
 
                     indice2.addAndGet(1);
                 });
-
                 setFieldsValue(form, fields, "TOTALE FASE ATOTALE DOCENZA  FASE A", roundDoubleAndFormat(pf.getChecklist_finale().getTot_docenza_fa()) + " €");
 
                 //PAG 3
@@ -1004,9 +982,7 @@ public class Pdf_new {
                     + getOnlyStrings(sa.getRagionesociale()) + "_"
                     + dataconsegna.toString("ddMMyyyyHHmmSSS") + ".AssenzaINPS.pdf");
 
-            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is)) {
-                PdfWriter writer = new PdfWriter(pdfOut);
-                PdfDocument pdfDoc = new PdfDocument(reader, writer);
+            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is); PdfWriter writer = new PdfWriter(pdfOut); PdfDocument pdfDoc = new PdfDocument(reader, writer)) {
                 PdfAcroForm form = getAcroForm(pdfDoc, true);
                 form.setGenerateAppearance(true);
 
@@ -1016,24 +992,19 @@ public class Pdf_new {
                 setFieldsValue(form, fields, "NOME", sa.getNome().toUpperCase());
                 setFieldsValue(form, fields, "NOMESA", sa.getRagionesociale().toUpperCase());
                 setFieldsValue(form, fields, "INDIRIZZOSEDE", sa.getIndirizzo().toUpperCase() + " - " + sa.getComune().getNome());
-
-//                setFieldsValue(form, fields, "CFSA", sa.getCodicefiscale().toUpperCase());
                 setFieldsValue(form, fields, "PIVASA", sa.getPiva().toUpperCase());
-
+                setFieldsValue(form, fields, "LUOGO", sa.getComune().getNome());
                 setFieldsValue(form, fields, "DATA", dataconsegna.toString(patternITA));
 
                 if (flatten) {
                     form.flattenFields();
                     form.flush();
                 }
-
 //                BarcodeQRCode barcode = new BarcodeQRCode(username
 //                        + " / ASSENZA POSIZIONE / "
 //                        + StringUtils.deleteWhitespace(sa.getRagionesociale())
 //                        + " / " + dataconsegna.toString("ddMMyyyyHHmmSSS"));
 //                printbarcode(barcode, pdfDoc);
-                pdfDoc.close();
-                writer.close();
 
             }
 
@@ -1051,7 +1022,6 @@ public class Pdf_new {
             Entity e,
             String username,
             Allievi al,
-            String orerendicontabili,
             DateTime dataconsegna,
             boolean flatten) {
 
@@ -1064,25 +1034,31 @@ public class Pdf_new {
             createDir(pathtemp);
             File pdfOut = new File(pathtemp + username + "_" + StringUtils.deleteWhitespace(al.getCognome() + "_" + al.getNome()) + "_" + dataconsegna.toString("ddMMyyyyHHmmSSS") + ".M7.pdf");
 
-            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is)) {
-                PdfWriter writer = new PdfWriter(pdfOut);
-                PdfDocument pdfDoc = new PdfDocument(reader, writer);
+            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is); PdfWriter writer = new PdfWriter(pdfOut); PdfDocument pdfDoc = new PdfDocument(reader, writer)) {
+
+                Database db1 = new Database(false);
+                String modalita = db1.getModalita(al.getProgetto().getId());
+                db1.closeDB();
+
                 PdfAcroForm form = getAcroForm(pdfDoc, true);
                 form.setGenerateAppearance(true);
                 Map<String, PdfFormField> fields = form.getAllFormFields();
 
-                setFieldsValue(form, fields, "COGNOME", al.getCognome().toUpperCase());
-                setFieldsValue(form, fields, "NOME", al.getNome().toUpperCase());
-                setFieldsValue(form, fields, "CF", al.getCodicefiscale().toUpperCase());
-                setFieldsValue(form, fields, "COMUNENASCITA", al.getComune_nascita().getNome().toUpperCase());
-                setFieldsValue(form, fields, "PROVINCIANASCITA", al.getComune_nascita().getCod_provincia().toUpperCase());
-                setFieldsValue(form, fields, "DATANASCITA", sdfITA.format(al.getDatanascita()));
-                setFieldsValue(form, fields, "ORE", orerendicontabili);
+                setFieldsValue(form, fields, "cognome", al.getCognome().toUpperCase());
+                setFieldsValue(form, fields, "nome", al.getNome().toUpperCase());
+                setFieldsValue(form, fields, "nascita_comune", al.getComune_nascita().getNome().toUpperCase());
+                setFieldsValue(form, fields, "nascita_provincia", al.getComune_nascita().getCod_provincia().toUpperCase());
+                setFieldsValue(form, fields, "nascita_data", sdfITA.format(al.getDatanascita()));
+                setFieldsValue(form, fields, "NOMESA", al.getSoggetto().getRagionesociale().toUpperCase());
                 setFieldsValue(form, fields, "CIP", al.getProgetto().getCip());
                 setFieldsValue(form, fields, "DATAINIZIO", sdfITA.format(al.getProgetto().getStart()));
                 setFieldsValue(form, fields, "DATAFINE", sdfITA.format(al.getProgetto().getEnd()));
-                setFieldsValue(form, fields, "NOMESA", al.getSoggetto().getRagionesociale().toUpperCase());
-                setFieldsValue(form, fields, "LUOGODATA", al.getSoggetto().getComune().getNome().toUpperCase() + "; " + dataconsegna.toString(patternITA));
+                setFieldsValue(form, fields, "ORE", roundDoubleAndFormat(al.getImporto()));
+                setFieldsValue(form, fields, "MODALITA", modalita);
+                setFieldsValue(form, fields, "DATA", al.getSoggetto().getComune().getNome().toUpperCase());
+                setFieldsValue(form, fields, "REF_NOME", al.getSoggetto().getNome_refente().toUpperCase());
+                setFieldsValue(form, fields, "REF_COGNOME", al.getSoggetto().getCognome_referente().toUpperCase());
+                setFieldsValue(form, fields, "REF_RUOLO", al.getSoggetto().getCarica().toUpperCase());
 
                 fields.forEach((KEY, VALUE) -> {
                     form.partialFormFlattening(KEY);
@@ -1097,8 +1073,6 @@ public class Pdf_new {
                         + StringUtils.deleteWhitespace(al.getCognome() + "_" + al.getNome())
                         + " / " + dataconsegna.toString("ddMMyyyyHHmmSSS"));
                 printbarcode(barcode, pdfDoc);
-                pdfDoc.close();
-                writer.close();
             }
             if (checkPDF(pdfOut)) {
                 return pdfOut;
@@ -1121,7 +1095,7 @@ public class Pdf_new {
         try {
 
             Database d1 = new Database(false);
-            List<Registro_completo> out = d1.registro_modello6(String.valueOf(pf.getId()));
+            List<Registro_completo> out = d1.registro_modello6(Ints.checkedCast(pf.getId()));
             d1.closeDB();
 
             TipoDoc p = e.getEm().find(TipoDoc.class, 31L);
@@ -1134,8 +1108,7 @@ public class Pdf_new {
                     + getOnlyStrings(sa.getRagionesociale()) + "_"
                     + dataconsegna.toString("ddMMyyyyHHmmSSS") + ".M6.pdf");
 
-            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is); PdfWriter writer = new PdfWriter(pdfOut)) {
-                PdfDocument pdfDoc = new PdfDocument(reader, writer);
+            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is); PdfWriter writer = new PdfWriter(pdfOut); PdfDocument pdfDoc = new PdfDocument(reader, writer)) {
                 PdfAcroForm form = getAcroForm(pdfDoc, true);
                 form.setGenerateAppearance(true);
 
@@ -1183,29 +1156,27 @@ public class Pdf_new {
                     String DATAINIZIOFASEA = lezioniA.getFirst();
                     String DATAFINEFASEA = lezioniA.getLast();
 
-//                    System.out.println("A) " + DATAINIZIOFASEA + " -- " + DATAFINEFASEA);
                     List<Registro_completo> faseA = out.stream().filter(r1
-                            -> r1.getRuolo().contains("NEET")
+                            -> r1.getRuolo().contains("ALLIEVO")
                             && r1.getFase().equalsIgnoreCase("A"))
                             .collect(Collectors.toList());
 
                     List<Registro_completo> allieviFaseA = new ArrayList<>();
-                    List<Integer> neetID = faseA.stream().map(r1 -> r1.getIdutente()).distinct().collect(Collectors.toList());
+                    List<Integer> allieviIDINT = faseA.stream().map(r1 -> r1.getIdutente()).distinct().collect(Collectors.toList());
                     AtomicInteger index_allieviA = new AtomicInteger(1);
 
-                    neetID.forEach(n1 -> {
+                    allieviIDINT.forEach(n1 -> {
                         Allievi n2 = e.getEm().find(Allievi.class, Long.valueOf(String.valueOf(n1)));
                         MascheraM5 datiM5 = e.getM5_byAllievo(n2);
-
                         Registro_completo allievo_A = new Registro_completo();
                         allievo_A.setId(index_allieviA.get());
                         allievo_A.setCognome(n2.getCognome().toUpperCase());
                         allievo_A.setNome(n2.getNome().toUpperCase());
                         allievo_A.setCf(n2.getCodicefiscale().toUpperCase());
-                        allievo_A.setDatapattogg(sdfITA.format(n2.getIscrizionegg()));
+                        allievo_A.setTarget("TARGET " + Utility.parseIntR(n2.getPartecipazione()));
 
                         if (datiM5 != null) {
-                            allievo_A.setDomandaammissione(Utility.convertbooleantostring(datiM5.isDomanda_ammissione_presente()));
+                            allievo_A.setDomandaammissione(Utility.convertbooleantostring(datiM5.isBusinessplan_presente()));
                             allievo_A.setModello5("SI");
                         } else {
                             allievo_A.setDomandaammissione("NO");
@@ -1233,10 +1204,6 @@ public class Pdf_new {
 
                                 n3.forEach(r3 -> {
                                     long ADD = r3.getTotaleorerendicontabili();
-                                    if (Utility.demoversion && ADD > 18000000L) {
-                                        ADD = 18000000L;
-                                    }
-
                                     totaleA.addAndGet(ADD);
                                     long valore = orario.getOrDefault(indicigiorni.get(), 0L);
                                     if (valore == 0L) {
@@ -1251,19 +1218,58 @@ public class Pdf_new {
                             indicigiorni.addAndGet(1);
                         });
 
-                        allievo_A.setData1(orario.get(1));
-                        allievo_A.setData2(orario.get(2));
-                        allievo_A.setData3(orario.get(3));
-                        allievo_A.setData4(orario.get(4));
-                        allievo_A.setData5(orario.get(5));
-                        allievo_A.setData6(orario.get(6));
-                        allievo_A.setData7(orario.get(7));
-                        allievo_A.setData8(orario.get(8));
-                        allievo_A.setData9(orario.get(9));
-                        allievo_A.setData10(orario.get(10));
-                        allievo_A.setData11(orario.get(11));
-                        allievo_A.setData12(orario.get(12));
-
+                        for (int in = 1; in <= orario.size(); in++) {
+                            switch (in) {
+                                case 1 -> {
+                                    allievo_A.setData1(orario.get(1));
+                                }
+                                case 2 -> {
+                                    allievo_A.setData2(orario.get(2));
+                                }
+                                case 3 -> {
+                                    allievo_A.setData3(orario.get(3));
+                                }
+                                case 4 -> {
+                                    allievo_A.setData4(orario.get(4));
+                                }
+                                case 5 -> {
+                                    allievo_A.setData5(orario.get(5));
+                                }
+                                case 6 -> {
+                                    allievo_A.setData6(orario.get(6));
+                                }
+                                case 7 -> {
+                                    allievo_A.setData7(orario.get(7));
+                                }
+                                case 8 -> {
+                                    allievo_A.setData8(orario.get(8));
+                                }
+                                case 9 -> {
+                                    allievo_A.setData9(orario.get(9));
+                                }
+                                case 10 -> {
+                                    allievo_A.setData10(orario.get(10));
+                                }
+                                case 11 -> {
+                                    allievo_A.setData11(orario.get(11));
+                                }
+                                case 12 -> {
+                                    allievo_A.setData12(orario.get(12));
+                                }
+                                case 13 -> {
+                                    allievo_A.setData13(orario.get(13));
+                                }
+                                case 14 -> {
+                                    allievo_A.setData14(orario.get(14));
+                                }
+                                case 15 -> {
+                                    allievo_A.setData15(orario.get(15));
+                                }
+                                case 16 -> {
+                                    allievo_A.setData16(orario.get(16));
+                                }
+                            }
+                        }
                         allievo_A.setTotaleore(totaleA.get());
                         allieviFaseA.add(allievo_A);
                         index_allieviA.addAndGet(1);
@@ -1275,7 +1281,14 @@ public class Pdf_new {
                     AtomicInteger indicigiorniA = new AtomicInteger(1);
                     lezioniA.forEach(lezione -> {
                         setFieldsValue(form, fields, "DATA" + indicigiorniA.get() + "FASEA", lezione);
-                        setFieldsValue(form, fields, "DATAD" + indicigiorniA.get() + "A", lezione);
+
+                        Lezioni_Modelli lm1 = m3.getLezioni().stream().filter(l1 -> new DateTime(l1.getGiorno())
+                                .toString("dd/MM/yyyy").equals(lezione)).findAny().orElse(null);
+                        if (lm1 == null) {
+                            setFieldsValue(form, fields, "TIPO" + indicigiorniA.get() + "FASEA", "-");
+                        } else {
+                            setFieldsValue(form, fields, "TIPO" + indicigiorniA.get() + "FASEA", lm1.getTipolez());
+                        }
                         indicigiorniA.addAndGet(1);
                     });
 
@@ -1284,31 +1297,36 @@ public class Pdf_new {
                         setFieldsValue(form, fields, "Cognome" + indice, al1.getCognome().toUpperCase());
                         setFieldsValue(form, fields, "Nome" + indice, al1.getNome().toUpperCase());
                         setFieldsValue(form, fields, "CF" + indice, al1.getCf().toUpperCase());
-                        setFieldsValue(form, fields, "Data Patto GG" + indice, al1.getDatapattogg());
+
+                        setFieldsValue(form, fields, "Data Patto GG" + indice, al1.getTarget());
                         setFieldsValue(form, fields, "Domanda di ammissione" + indice, al1.getDomandaammissione());
                         setFieldsValue(form, fields, "Doc di accompag  Modello 5" + indice, al1.getModello5());
 
-                        setFieldsValue(form, fields, "OREA1_" + indice, roundFloatAndFormat(al1.getData1(), true));
-                        setFieldsValue(form, fields, "OREA2_" + indice, roundFloatAndFormat(al1.getData2(), true));
-                        setFieldsValue(form, fields, "OREA3_" + indice, roundFloatAndFormat(al1.getData3(), true));
-                        setFieldsValue(form, fields, "OREA4_" + indice, roundFloatAndFormat(al1.getData4(), true));
-                        setFieldsValue(form, fields, "OREA5_" + indice, roundFloatAndFormat(al1.getData5(), true));
-                        setFieldsValue(form, fields, "OREA6_" + indice, roundFloatAndFormat(al1.getData6(), true));
-                        setFieldsValue(form, fields, "OREA7_" + indice, roundFloatAndFormat(al1.getData7(), true));
-                        setFieldsValue(form, fields, "OREA8_" + indice, roundFloatAndFormat(al1.getData8(), true));
-                        setFieldsValue(form, fields, "OREA9_" + indice, roundFloatAndFormat(al1.getData9(), true));
-                        setFieldsValue(form, fields, "OREA10_" + indice, roundFloatAndFormat(al1.getData10(), true));
-                        setFieldsValue(form, fields, "OREA11_" + indice, roundFloatAndFormat(al1.getData11(), true));
-                        setFieldsValue(form, fields, "OREA12_" + indice, roundFloatAndFormat(al1.getData12(), true));
-
-                        setFieldsValue(form, fields, "TOTALEA" + indice, roundFloatAndFormat(al1.getTotaleore(), true));
+                        setFieldsValue(form, fields, "OREA1_" + indice, roundFloatAndFormat(al1.getData1(), true, false));
+                        setFieldsValue(form, fields, "OREA2_" + indice, roundFloatAndFormat(al1.getData2(), true, false));
+                        setFieldsValue(form, fields, "OREA3_" + indice, roundFloatAndFormat(al1.getData3(), true, false));
+                        setFieldsValue(form, fields, "OREA4_" + indice, roundFloatAndFormat(al1.getData4(), true, false));
+                        setFieldsValue(form, fields, "OREA5_" + indice, roundFloatAndFormat(al1.getData5(), true, false));
+                        setFieldsValue(form, fields, "OREA6_" + indice, roundFloatAndFormat(al1.getData6(), true, false));
+                        setFieldsValue(form, fields, "OREA7_" + indice, roundFloatAndFormat(al1.getData7(), true, false));
+                        setFieldsValue(form, fields, "OREA8_" + indice, roundFloatAndFormat(al1.getData8(), true, false));
+                        setFieldsValue(form, fields, "OREA9_" + indice, roundFloatAndFormat(al1.getData9(), true, false));
+                        setFieldsValue(form, fields, "OREA10_" + indice, roundFloatAndFormat(al1.getData10(), true, false));
+                        setFieldsValue(form, fields, "OREA11_" + indice, roundFloatAndFormat(al1.getData11(), true, false));
+                        setFieldsValue(form, fields, "OREA12_" + indice, roundFloatAndFormat(al1.getData12(), true, false));
+                        setFieldsValue(form, fields, "OREA13_" + indice, roundFloatAndFormat(al1.getData13(), true, false));
+                        setFieldsValue(form, fields, "OREA14_" + indice, roundFloatAndFormat(al1.getData14(), true, false));
+                        setFieldsValue(form, fields, "OREA15_" + indice, roundFloatAndFormat(al1.getData15(), true, false));
+                        setFieldsValue(form, fields, "OREA16_" + indice, roundFloatAndFormat(al1.getData16(), true, false));
+                        setFieldsValue(form, fields, "TOTALEA" + indice, roundFloatAndFormat(al1.getTotaleore(), true, false));
 
                     });
 
                     // PAGINA 4 - 7
                     ModelliPrg m4 = Utility.filterModello4(pf.getModelli());
+
                     List<Registro_completo> faseB = out.stream().filter(r1
-                            -> r1.getRuolo().contains("NEET")
+                            -> r1.getRuolo().contains("ALLIEVO")
                             && r1.getFase().equalsIgnoreCase("B"))
                             .collect(Collectors.toList());
 
@@ -1321,19 +1339,19 @@ public class Pdf_new {
                                 .map(l1 -> new DateTime(l1.getGiorno())
                                 .toString("dd/MM/yyyy")).distinct()
                                 .collect(Collectors.toCollection(LinkedList::new));
-                        if (lezioniB.isEmpty()) {
-//                            System.out.println("B) GRUPPO " + i + " VUOTO");
-                        } else {
+
+                        if (!lezioniB.isEmpty()) {
+
                             String DATAINIZIOFASEB = lezioniB.getFirst();
                             String DATAFINEFASEB = lezioniB.getLast();
 
                             List<Registro_completo> grupposingolo = faseB.stream().filter(r2 -> r2.getGruppofaseb()
                                     == indiceb.get()).collect(Collectors.toList());
 
-                            neetID = grupposingolo.stream().map(r1 -> r1.getIdutente()).distinct().collect(Collectors.toList());
+                            allieviIDINT = grupposingolo.stream().map(r1 -> r1.getIdutente()).distinct().collect(Collectors.toList());
                             AtomicInteger index_allieviB = new AtomicInteger(1);
-                            neetID.forEach(n1 -> {
-                                Allievi n2 = e.getEm().find(Allievi.class, Long.parseLong(String.valueOf(n1)));
+                            allieviIDINT.forEach(n1 -> {
+                                Allievi n2 = e.getEm().find(Allievi.class, Long.valueOf(String.valueOf(n1)));
 
                                 Registro_completo allievo_B = new Registro_completo();
                                 allievo_B.setGruppoB(indiceb.get());
@@ -1347,6 +1365,7 @@ public class Pdf_new {
                                 AtomicLong totaleB = new AtomicLong(0L);
                                 AtomicInteger indicigiorni = new AtomicInteger(1);
                                 lezioniB.forEach(giorno1 -> {
+
                                     List<Registro_completo> n3 = grupposingolo.stream().filter(
                                             r3
                                             -> r3.getIdutente() == n1
@@ -1358,12 +1377,7 @@ public class Pdf_new {
                                         orarioB.put(indicigiorni.get(), 0L);
                                     } else {
                                         n3.forEach(r3 -> {
-
                                             long ADD = r3.getTotaleorerendicontabili();
-                                            if (Utility.demoversion && ADD > 18000000L) {
-                                                ADD = 18000000L;
-                                            }
-
                                             totaleB.addAndGet(ADD);
                                             long valore = orarioB.getOrDefault(indicigiorni.get(), 0L);
                                             if (valore == 0L) {
@@ -1376,17 +1390,29 @@ public class Pdf_new {
                                     }
                                     indicigiorni.addAndGet(1);
                                 });
+
                                 try {
-                                    allievo_B.setData1(orarioB.get(1));
-                                    allievo_B.setData2(orarioB.get(2));
-                                    allievo_B.setData3(orarioB.get(3));
-                                    allievo_B.setData4(orarioB.get(4));
+
+                                    for (int in = 1; in <= orarioB.size(); in++) {
+                                        switch (in) {
+                                            case 1 -> {
+                                                allievo_B.setData1(orarioB.get(1));
+                                            }
+                                            case 2 -> {
+                                                allievo_B.setData2(orarioB.get(2));
+                                            }
+                                            case 3 -> {
+                                                allievo_B.setData3(orarioB.get(3));
+                                            }
+                                            case 4 -> {
+                                                allievo_B.setData4(orarioB.get(4));
+                                            }
+                                        }
+                                    }
                                     allievo_B.setTotaleore(totaleB.get());
                                     allieviFaseB.add(allievo_B);
                                 } catch (Exception exx) {
                                 }
-
-//                                System.out.println(allievo_B.toString());
                                 index_allieviB.addAndGet(1);
                             });
 
@@ -1396,23 +1422,28 @@ public class Pdf_new {
                             AtomicInteger indicigiorniB = new AtomicInteger(1);
                             lezioniB.forEach(lezione -> {
                                 setFieldsValue(form, fields, "DATAB" + indiceb.get() + "_" + indicigiorniB.get(), lezione);
+
+                                Lezioni_Modelli lm1 = m4.getLezioni().stream().filter(l1 -> new DateTime(l1.getGiorno())
+                                        .toString("dd/MM/yyyy").equals(lezione)).findAny().orElse(null);
+                                if (lm1 == null) {
+                                    setFieldsValue(form, fields, "TIPOB" + indiceb.get() + "_" + indicigiorniB.get(), "-");
+                                } else {
+                                    setFieldsValue(form, fields, "TIPOB" + indiceb.get() + "_" + indicigiorniB.get(), lm1.getTipolez());
+                                }
+
                                 indicigiorniB.addAndGet(1);
                             });
 
                             allieviFaseB.forEach(al1 -> {
                                 int indice = al1.getId();
-
                                 setFieldsValue(form, fields, "CognomeB" + al1.getGruppoB() + "_" + indice, al1.getCognome().toUpperCase());
                                 setFieldsValue(form, fields, "NomeB" + al1.getGruppoB() + "_" + indice, al1.getNome().toUpperCase());
                                 setFieldsValue(form, fields, "CFB" + al1.getGruppoB() + "_" + indice, al1.getCf().toUpperCase());
-
-                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_1", roundFloatAndFormat(al1.getData1(), true));
-                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_2", roundFloatAndFormat(al1.getData2(), true));
-                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_3", roundFloatAndFormat(al1.getData3(), true));
-                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_4", roundFloatAndFormat(al1.getData4(), true));
-
-                                setFieldsValue(form, fields, "TOTALEB" + al1.getGruppoB() + "_" + indice, roundFloatAndFormat(al1.getTotaleore(), true));
-
+                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_1", roundFloatAndFormat(al1.getData1(), true, false));
+                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_2", roundFloatAndFormat(al1.getData2(), true, false));
+                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_3", roundFloatAndFormat(al1.getData3(), true, false));
+                                setFieldsValue(form, fields, "OREB" + al1.getGruppoB() + "_" + indice + "_4", roundFloatAndFormat(al1.getData4(), true, false));
+                                setFieldsValue(form, fields, "TOTALEB" + al1.getGruppoB() + "_" + indice, roundFloatAndFormat(al1.getTotaleore(), true, false));
                             });
 
                         }
@@ -1432,8 +1463,9 @@ public class Pdf_new {
                     AtomicLong totaleD_A = new AtomicLong(0L);
 
                     AtomicInteger index_docenti = new AtomicInteger(1);
+
                     docentiid.forEach(r1 -> {
-                        Docenti docente = e.getEm().find(Docenti.class, Long.parseLong(String.valueOf(r1)));
+                        Docenti docente = e.getEm().find(Docenti.class, Long.valueOf(String.valueOf(r1)));
                         if (docente != null) {
                             Registro_completo doc1 = new Registro_completo();
                             doc1.setId(index_docenti.get());
@@ -1475,18 +1507,58 @@ public class Pdf_new {
 
                             });
 
-                            doc1.setData1(orarioD.get(1));
-                            doc1.setData2(orarioD.get(2));
-                            doc1.setData3(orarioD.get(3));
-                            doc1.setData4(orarioD.get(4));
-                            doc1.setData5(orarioD.get(5));
-                            doc1.setData6(orarioD.get(6));
-                            doc1.setData7(orarioD.get(7));
-                            doc1.setData8(orarioD.get(8));
-                            doc1.setData9(orarioD.get(9));
-                            doc1.setData10(orarioD.get(10));
-                            doc1.setData11(orarioD.get(11));
-                            doc1.setData12(orarioD.get(12));
+                            for (int in = 1; in <= orarioD.size(); in++) {
+                                switch (in) {
+                                    case 1 -> {
+                                        doc1.setData1(orarioD.get(1));
+                                    }
+                                    case 2 -> {
+                                        doc1.setData2(orarioD.get(2));
+                                    }
+                                    case 3 -> {
+                                        doc1.setData3(orarioD.get(3));
+                                    }
+                                    case 4 -> {
+                                        doc1.setData4(orarioD.get(4));
+                                    }
+                                    case 5 -> {
+                                        doc1.setData5(orarioD.get(5));
+                                    }
+                                    case 6 -> {
+                                        doc1.setData6(orarioD.get(6));
+                                    }
+                                    case 7 -> {
+                                        doc1.setData7(orarioD.get(7));
+                                    }
+                                    case 8 -> {
+                                        doc1.setData8(orarioD.get(8));
+                                    }
+                                    case 9 -> {
+                                        doc1.setData9(orarioD.get(9));
+                                    }
+                                    case 10 -> {
+                                        doc1.setData10(orarioD.get(10));
+                                    }
+                                    case 11 -> {
+                                        doc1.setData11(orarioD.get(11));
+                                    }
+                                    case 12 -> {
+                                        doc1.setData12(orarioD.get(12));
+                                    }
+                                    case 13 -> {
+                                        doc1.setData13(orarioD.get(13));
+                                    }
+                                    case 14 -> {
+                                        doc1.setData14(orarioD.get(14));
+                                    }
+                                    case 15 -> {
+                                        doc1.setData15(orarioD.get(15));
+                                    }
+                                    case 16 -> {
+                                        doc1.setData16(orarioD.get(16));
+                                    }
+                                }
+                            }
                             doc1.setTotaleore(totaleA.get());
                             docenti.add(doc1);
                         }
@@ -1498,24 +1570,25 @@ public class Pdf_new {
                         setFieldsValue(form, fields, "CognomeD_A" + indice, doc1.getCognome().toUpperCase());
                         setFieldsValue(form, fields, "NomeD_A" + indice, doc1.getNome().toUpperCase());
                         setFieldsValue(form, fields, "CFD_A" + indice, doc1.getCf().toUpperCase());
-                        setFieldsValue(form, fields, "FASCIAD_A" + indice, doc1.getFascia());
-
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_1", roundFloatAndFormat(doc1.getData1(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_2", roundFloatAndFormat(doc1.getData2(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_3", roundFloatAndFormat(doc1.getData3(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_4", roundFloatAndFormat(doc1.getData4(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_5", roundFloatAndFormat(doc1.getData5(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_6", roundFloatAndFormat(doc1.getData6(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_7", roundFloatAndFormat(doc1.getData7(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_8", roundFloatAndFormat(doc1.getData8(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_9", roundFloatAndFormat(doc1.getData9(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_10", roundFloatAndFormat(doc1.getData10(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_11", roundFloatAndFormat(doc1.getData11(), true));
-                        setFieldsValue(form, fields, "ORED_A_" + indice + "_12", roundFloatAndFormat(doc1.getData12(), true));
-                        setFieldsValue(form, fields, "TOTALED_B" + indice, roundFloatAndFormat(doc1.getTotaleore(), true));
-
+//                        ORED_A1_1
+                        setFieldsValue(form, fields, "ORED_A1_" + indice, roundFloatAndFormat(doc1.getData1(), true, false));
+                        setFieldsValue(form, fields, "ORED_A2_" + indice, roundFloatAndFormat(doc1.getData2(), true, false));
+                        setFieldsValue(form, fields, "ORED_A3_" + indice, roundFloatAndFormat(doc1.getData3(), true, false));
+                        setFieldsValue(form, fields, "ORED_A4_" + indice, roundFloatAndFormat(doc1.getData4(), true, false));
+                        setFieldsValue(form, fields, "ORED_A5_" + indice, roundFloatAndFormat(doc1.getData5(), true, false));
+                        setFieldsValue(form, fields, "ORED_A6_" + indice, roundFloatAndFormat(doc1.getData6(), true, false));
+                        setFieldsValue(form, fields, "ORED_A7_" + indice, roundFloatAndFormat(doc1.getData7(), true, false));
+                        setFieldsValue(form, fields, "ORED_A8_" + indice, roundFloatAndFormat(doc1.getData8(), true, false));
+                        setFieldsValue(form, fields, "ORED_A9_" + indice, roundFloatAndFormat(doc1.getData9(), true, false));
+                        setFieldsValue(form, fields, "ORED_A10_" + indice, roundFloatAndFormat(doc1.getData10(), true, false));
+                        setFieldsValue(form, fields, "ORED_A11_" + indice, roundFloatAndFormat(doc1.getData11(), true, false));
+                        setFieldsValue(form, fields, "ORED_A12_" + indice, roundFloatAndFormat(doc1.getData12(), true, false));
+                        setFieldsValue(form, fields, "ORED_A13_" + indice, roundFloatAndFormat(doc1.getData13(), true, false));
+                        setFieldsValue(form, fields, "ORED_A14_" + indice, roundFloatAndFormat(doc1.getData14(), true, false));
+                        setFieldsValue(form, fields, "ORED_A15_" + indice, roundFloatAndFormat(doc1.getData15(), true, false));
+                        setFieldsValue(form, fields, "ORED_A16_" + indice, roundFloatAndFormat(doc1.getData16(), true, false));
+                        setFieldsValue(form, fields, "TOTALED_A" + indice, roundFloatAndFormat(doc1.getTotaleore(), true, false));
                     });
-                    setFieldsValue(form, fields, "TOTALED_B", roundFloatAndFormat(totaleD_A.get(), true));
                 }
 
                 if (flatten) {
@@ -1528,7 +1601,6 @@ public class Pdf_new {
                         + StringUtils.deleteWhitespace(sa.getRagionesociale())
                         + " / " + dataconsegna.toString("ddMMyyyyHHmmSSS"));
                 printbarcode(barcode, pdfDoc);
-                pdfDoc.close();
             }
             if (checkPDF(pdfOut)) {
                 return pdfOut;
@@ -1546,7 +1618,6 @@ public class Pdf_new {
             String username,
             SoggettiAttuatori sa,
             Allievi al,
-            String[] datifrequenza,
             MascheraM5 m5,
             DateTime dataconsegna,
             boolean flatten) {
@@ -1563,225 +1634,95 @@ public class Pdf_new {
 
                 String NOMESA = sa.getRagionesociale();
                 String DD = sa.getDd();
-                String PRESENZA = "NO";
-                String FAD = "SI";
-                String REGIONESEDE = "";
-                String COMUNESEDE = "";
-                String PROVINCIASEDE = "";
-                String INDIRIZZOSEDE = "";
-                String CIP = m5.getProgetto_formativo().getCip();
 
                 setFieldsValue(form, fields, "NOMESA", NOMESA);
                 setFieldsValue(form, fields, "DD", DD);
-                setFieldsValue(form, fields, "REGIONESEDE", REGIONESEDE);
-                setFieldsValue(form, fields, "COMUNESEDE", COMUNESEDE);
-                setFieldsValue(form, fields, "PROVINCIASEDE", PROVINCIASEDE);
-                setFieldsValue(form, fields, "INDIRIZZOSEDE", INDIRIZZOSEDE);
-
                 setFieldsValue(form, fields, "cognome", al.getCognome().toUpperCase());
                 setFieldsValue(form, fields, "nome", al.getNome().toUpperCase());
                 setFieldsValue(form, fields, "datanascita", sdfITA.format(al.getDatanascita()));
-                setFieldsValue(form, fields, "comune_nascita", al.getComune_nascita().getNome().toUpperCase());
+                setFieldsValue(form, fields, "eta", String.valueOf(get_eta(al.getDatanascita())));
                 setFieldsValue(form, fields, "codicefiscale", al.getCodicefiscale().toUpperCase());
+                setFieldsValue(form, fields, "sesso" + al.getSesso(), "Sì");
+
                 setFieldsValue(form, fields, "telefono", al.getTelefono());
                 setFieldsValue(form, fields, "email", al.getEmail().toLowerCase());
-                setFieldsValue(form, fields, "indirizzoresidenza", al.getIndirizzoresidenza().toUpperCase() + " " + al.getCivicoresidenza().toUpperCase());
-                setFieldsValue(form, fields, "comune_residenza", al.getComune_residenza().getNome().toUpperCase());
-                setFieldsValue(form, fields, "cap_residenza", al.getCapresidenza());
-                setFieldsValue(form, fields, "provincia_residenza", al.getComune_residenza().getCod_provincia().toUpperCase());
-                setFieldsValue(form, fields, "Ore di frequenza", sdfITA.format(al.getIscrizionegg())); //GG
+
+                setFieldsValue(form, fields, "res_regione", al.getComune_residenza().getRegione().toUpperCase());
+                setFieldsValue(form, fields, "res_indirizzo", al.getIndirizzoresidenza().toUpperCase());
+                setFieldsValue(form, fields, "res_comune", al.getComune_residenza().getNome().toUpperCase());
+                setFieldsValue(form, fields, "res_cap", al.getCapresidenza().toUpperCase());
+                setFieldsValue(form, fields, "res_prov", al.getComune_residenza().getProvincia().toUpperCase());
+
+                if (al.getComune_domicilio() != null) {
+                    setFieldsValue(form, fields, "dom_regione", al.getComune_domicilio().getRegione().toUpperCase());
+                    setFieldsValue(form, fields, "dom_indirizzo", al.getIndirizzodomicilio().toUpperCase());
+                    setFieldsValue(form, fields, "dom_comune", al.getComune_domicilio().getNome().toUpperCase());
+                    setFieldsValue(form, fields, "dom_cap", al.getCapdomicilio().toUpperCase());
+                    setFieldsValue(form, fields, "dom_prov", al.getComune_domicilio().getProvincia().toUpperCase());
+                }
+
+                setFieldsValue(form, fields, "titolostudio", al.getTitoloStudio().getDescrizione());
+                setFieldsValue(form, fields, "target", al.formatTarget());
+
+                String CIP = al.getProgetto().getCip();
+                String DATAINIZIO = sdfITA.format(al.getProgetto().getStart());
+                String DATAFINE = sdfITA.format(al.getProgetto().getEnd());
+
                 setFieldsValue(form, fields, "CIP", CIP);
+                setFieldsValue(form, fields, "DATAINIZIO", DATAINIZIO);
+                setFieldsValue(form, fields, "DATAFINE", DATAFINE);
+                setFieldsValue(form, fields, "ORE_TOT", roundDoubleAndFormat(al.getImporto()));
+                setFieldsValue(form, fields, "ORE_FA", roundDoubleAndFormat(al.getOrec_fasea()));
+                setFieldsValue(form, fields, "ORE_FB", roundDoubleAndFormat(al.getOrec_faseb()));
+                setFieldsValue(form, fields, "UD_FA", String.valueOf(al.getUd_ok_A()));
+                setFieldsValue(form, fields, "UD_FB", String.valueOf(al.getUd_ok_B()));
+                setFieldsValue(form, fields, "ASSENZEGIUST", String.valueOf(al.getAssenzeOK()));
 
-                setFieldsValue(form, fields, "datafinepercorso", datifrequenza[0]);
+                if (m5.isBusinessplan_presente()) {
 
-                if (Utility.demoversion) {
-                    setFieldsValue(form, fields, "orefrequenza", "80h 0min 0sec");
-                } else {
-                    setFieldsValue(form, fields, "orefrequenza", datifrequenza[1]);
-                }
+                    setFieldsValue(form, fields, "businessSI", "Sì");
 
-                StringBuilder listadocenti = new StringBuilder("");
-                m5.getProgetto_formativo().getDocenti().forEach(doc -> {
-                    listadocenti.append(doc.getCognome().toUpperCase()).append(" ").append(doc.getNome().toUpperCase()).append("; ");
-                });
-                setFieldsValue(form, fields, "ELENCODOCENTI", listadocenti.toString());
-                setFieldsValue(form, fields, "RAGIONESOCIALE", m5.getRagione_sociale().toUpperCase());
-                if (m5.getForma_giuridica() != null) {
-                    setFieldsValue(form, fields, "FORMAGIURIDICA", m5.getForma_giuridica().getDescrizione().toUpperCase());
-                }
-                setFieldsValue(form, fields, "SEDEINDIVIDUATA", Utility.convertbooleantostring(m5.isSede()));
-                setFieldsValue(form, fields, "COLLOQUIO", Utility.convertbooleantostring(m5.isColloquio()));
+                    if (m5.getGrado_completezza() != null) {
+                        setFieldsValue(form, fields, "grado_completezza" + m5.getGrado_completezza(), "Sì");
+                    }
+                    if (m5.getProbabilita() != null) {
+                        setFieldsValue(form, fields, "probabilita" + m5.getProbabilita(), "Sì");
+                    }
+                    if (m5.getForma_giuridica() != null) {
+                        setFieldsValue(form, fields, "forma_giuridica" + m5.getForma_giuridica().getId(), "Sì");
+                    }
+                    if (m5.getAteco() != null) {
+                        setFieldsValue(form, fields, "ATECO", m5.getAteco().getId());
+                    }
+                    setFieldsValue(form, fields, "SEDEINDIVIDUATA", Utility.convertbooleantostring(m5.isSede()));
 
-                setFieldsValue(form, fields, "IDEAIMPRESA", m5.getIdea_impresa().toUpperCase());
-                if (m5.getAteco() != null) {
-                    setFieldsValue(form, fields, "ATECO", m5.getAteco().getId());
-                }
+                    if (m5.getComune_localizzazione() != null) {
+                        setFieldsValue(form, fields, "COMUNE", m5.getComune_localizzazione().getNome().toUpperCase());
+                        setFieldsValue(form, fields, "PROVINCIA", m5.getComune_localizzazione().getCod_provincia().toUpperCase());
+                        setFieldsValue(form, fields, "REGIONE", m5.getComune_localizzazione().getRegione().toUpperCase());
+                    }
+                    setFieldsValue(form, fields, "TOT_FABB", Utility.numITA.format(m5.getTotale_fabbisogno()));
 
-                if (m5.getComune_localizzazione() != null) {
-                    setFieldsValue(form, fields, "COMUNE_NUOVO", m5.getComune_localizzazione().getNome().toUpperCase());
-                    setFieldsValue(form, fields, "REGIONE_NUOVO", m5.getComune_localizzazione().getRegione().toUpperCase());
-                }
+                    setFieldsValue(form, fields, "MISURA_INDIVIDUATA", Utility.convertbooleantostring(m5.isMisura_individuata()));
 
-                setFieldsValue(form, fields, "MOTIVAZIONEATTIVITA", m5.getMotivazione().toUpperCase());
-                setFieldsValue(form, fields, "FABBISOGNO", Utility.numITA.format(m5.getFabbisogno_finanziario()));
-                setFieldsValue(form, fields, "RICHIESTO", Utility.numITA.format(m5.getFinanziamento_richiesto_agevolazione()));
-
-                if (m5.isBando_se()) {
-                    setFieldsValue(form, fields, "AGEVOLAZIONE1", "On");
-
-                    if (m5.getBando_se_opzione() != null) {
-                        for (int i = 1; i < 4; i++) {
-                            if (m5.getBando_se_opzione().contains(String.valueOf(i))) {
-                                setFieldsValue(form, fields, "AGEVOLAZIONE1_" + i, "On");
-                            } else {
-                                form.partialFormFlattening("AGEVOLAZIONE1_" + i);
-                            }
+                    if (m5.isMisura_individuata()) {
+                        setFieldsValue(form, fields, "MISURA_SI_NOME", m5.getMisura_si_nome().toUpperCase());
+                        if (m5.getMisura_si_tipo() != null) {
+                            setFieldsValue(form, fields, "misura_si_tipo" + m5.getMisura_si_tipo(), "Sì");
+                        }
+                        if (m5.getMisura_si_motivazione() != null) {
+                            setFieldsValue(form, fields, "misura_si_motivazione" + m5.getMisura_si_motivazione(), "Sì");
                         }
                     } else {
-                        form.partialFormFlattening("AGEVOLAZIONE1_1");
-                        form.partialFormFlattening("AGEVOLAZIONE1_2");
-                        form.partialFormFlattening("AGEVOLAZIONE1_3");
-                    }
-                } else {
-                    form.partialFormFlattening("AGEVOLAZIONE1");
-                    form.partialFormFlattening("AGEVOLAZIONE1_1");
-                    form.partialFormFlattening("AGEVOLAZIONE1_2");
-                    form.partialFormFlattening("AGEVOLAZIONE1_3");
-                }
-
-                if (m5.isBando_sud()) {
-                    setFieldsValue(form, fields, "AGEVOLAZIONE2", "On");
-                    if (m5.getBando_sud_opzione() != null) {
-                        for (int i = 1; i < 7; i++) {
-                            if (m5.getBando_sud_opzione().contains(String.valueOf(i))) {
-                                setFieldsValue(form, fields, "AGEVOLAZIONE2_" + i, "On");
-                            } else {
-                                form.partialFormFlattening("AGEVOLAZIONE2_" + i);
-                            }
+                        if (m5.getMisura_no_motivazione() != null) {
+                            setFieldsValue(form, fields, "misura_no_motivazione" + m5.getMisura_no_motivazione(), "Sì");
                         }
-                    } else {
-                        form.partialFormFlattening("AGEVOLAZIONE2_1");
-                        form.partialFormFlattening("AGEVOLAZIONE2_2");
-                        form.partialFormFlattening("AGEVOLAZIONE2_3");
-                        form.partialFormFlattening("AGEVOLAZIONE2_4");
-                        form.partialFormFlattening("AGEVOLAZIONE2_5");
-                        form.partialFormFlattening("AGEVOLAZIONE2_6");
+
                     }
                 } else {
-                    form.partialFormFlattening("AGEVOLAZIONE2");
-                    form.partialFormFlattening("AGEVOLAZIONE2_1");
-                    form.partialFormFlattening("AGEVOLAZIONE2_2");
-                    form.partialFormFlattening("AGEVOLAZIONE2_3");
-                    form.partialFormFlattening("AGEVOLAZIONE2_4");
-                    form.partialFormFlattening("AGEVOLAZIONE2_5");
-                    form.partialFormFlattening("AGEVOLAZIONE2_6");
+                    setFieldsValue(form, fields, "businessNO", "Sì");
                 }
 
-                if (m5.isBando_reg()) {
-                    setFieldsValue(form, fields, "AGEVOLAZIONE3", "On");
-                } else {
-                    form.partialFormFlattening("AGEVOLAZIONE3");
-                }
-
-                if (m5.isNo_agevolazione()) {
-                    setFieldsValue(form, fields, "AGEVOLAZIONE4", "On");
-                    if (m5.getNo_agevolazione_opzione() != null) {
-                        for (int i = 1; i < 4; i++) {
-                            if (m5.getNo_agevolazione_opzione().contains(String.valueOf(i))) {
-                                setFieldsValue(form, fields, "AGEVOLAZIONE4_" + i, "On");
-                            } else {
-                                form.partialFormFlattening("AGEVOLAZIONE4_" + i);
-                            }
-                        }
-                    } else {
-                        form.partialFormFlattening("AGEVOLAZIONE4_1");
-                        form.partialFormFlattening("AGEVOLAZIONE4_2");
-                        form.partialFormFlattening("AGEVOLAZIONE4_3");
-                    }
-                } else {
-                    form.partialFormFlattening("AGEVOLAZIONE4");
-                    form.partialFormFlattening("AGEVOLAZIONE4_1");
-                    form.partialFormFlattening("AGEVOLAZIONE4_2");
-                    form.partialFormFlattening("AGEVOLAZIONE4_3");
-                }
-
-                //TABELLA 1
-                if (m5.isTabella_premialita()) {
-                    //  PAGINA PREMIALITA   //
-                    // 1=0;2=2;3=3.2;4=4.4; //
-                    if (m5.getTabella_premialita_val() != null) {
-                        List<String> elencovalori = Splitter.on(";").splitToList(m5.getTabella_premialita_val());
-                        elencovalori.forEach(val1 -> {
-                            List<String> content = Splitter.on("=").splitToList(val1);
-                            if (content.size() == 3) {
-                                setFieldsValue(form, fields, "PREMIALITAB" + content.get(0), content.get(1));
-                                setFieldsValue(form, fields, "PREMIALITAC" + content.get(0), content.get(2));
-                            }
-                        });
-                        setFieldsValue(form, fields, "PREMIALITAPUNTEGGIO", String.valueOf(m5.getTabella_premialita_punteggio()));
-                        setFieldsValue(form, fields, "PREMIALITA", String.valueOf(m5.getTabella_premialita_totale()));
-                    } else {
-                        form.partialFormFlattening("PREMIALITAB1");
-                        form.partialFormFlattening("PREMIALITAC1");
-                        form.partialFormFlattening("PREMIALITAB2");
-                        form.partialFormFlattening("PREMIALITAC2");
-                        form.partialFormFlattening("PREMIALITAB3");
-                        form.partialFormFlattening("PREMIALITAC3");
-                        form.partialFormFlattening("PREMIALITAB4");
-                        form.partialFormFlattening("PREMIALITAC4");
-                        form.partialFormFlattening("PREMIALITAPUNTEGGIO");
-                        form.partialFormFlattening("PREMIALITA");
-                    }
-                } else {
-                    //  PAGINA VALUTAZIONE  //
-                    if (m5.getTabella_valutazionefinale_val() != null) {
-                        List<String> elencovalori = Splitter.on(";").splitToList(m5.getTabella_valutazionefinale_val());
-                        elencovalori.forEach(val1 -> {
-                            List<String> content = Splitter.on("=").splitToList(val1);
-                            if (content.size() == 3) {
-                                setFieldsValue(form, fields, "VALUTAZIONEFINALEB" + content.get(0), content.get(1));
-                                setFieldsValue(form, fields, "VALUTAZIONEFINALEC" + content.get(0), content.get(2));
-                            }
-                        });
-                        setFieldsValue(form, fields, "VALUTAZIONEFINALEPUNTEGGIO", String.valueOf(m5.getTabella_valutazionefinale_punteggio()));
-                        setFieldsValue(form, fields, "VALUTAZIONEFINALE", String.valueOf(m5.getTabella_valutazionefinale_totale()));
-                    } else {
-                        form.partialFormFlattening("VALUTAZIONEFINALEB1");
-                        form.partialFormFlattening("VALUTAZIONEFINALEC1");
-                        form.partialFormFlattening("VALUTAZIONEFINALEB2");
-                        form.partialFormFlattening("VALUTAZIONEFINALEC2");
-                        form.partialFormFlattening("VALUTAZIONEFINALEB3");
-                        form.partialFormFlattening("VALUTAZIONEFINALEC3");
-                        form.partialFormFlattening("VALUTAZIONEFINALEB4");
-                        form.partialFormFlattening("VALUTAZIONEFINALEC4");
-                        form.partialFormFlattening("VALUTAZIONEFINALEPUNTEGGIO");
-                        form.partialFormFlattening("VALUTAZIONEFINALE");
-                    }
-                }
-                fields.forEach((KEY, VALUE) -> {
-                    boolean checkbox = asList(VALUE.getAppearanceStates()).size() > 0;
-                    if (checkbox) {
-                        if (KEY.equalsIgnoreCase("PRESENZA")) {
-                            if (PRESENZA.equals("SI")) {
-                                setFieldsValue(form, fields, KEY, "On");
-                            } else {
-                                form.partialFormFlattening(KEY);
-                            }
-                        } else if (KEY.equalsIgnoreCase("FAD")) {
-                            if (FAD.equals("SI")) {
-                                setFieldsValue(form, fields, KEY, "On");
-                            } else {
-                                form.partialFormFlattening(KEY);
-                            }
-                        } else {
-                            form.partialFormFlattening(KEY);
-                        }
-                    } else {
-
-                        form.partialFormFlattening(KEY);
-
-                    }
-                });
                 if (flatten) {
 
                     form.flattenFields();

@@ -18,10 +18,8 @@ import rc.so.entity.Item;
 import rc.so.util.Fadroom;
 import rc.so.util.Utenti;
 import rc.so.util.Utility;
-import static rc.so.util.Utility.LOGAPP;
 import static rc.so.util.Utility.calcoladurata;
 import static rc.so.util.Utility.createDir;
-import static rc.so.util.Utility.estraiEccezione;
 import static rc.so.util.Utility.formatStringtoStringDate;
 import static rc.so.util.Utility.getUtilDate;
 import static rc.so.util.Utility.patternFile;
@@ -38,6 +36,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import static java.sql.ResultSet.CONCUR_READ_ONLY;
+import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -48,7 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
@@ -60,6 +60,7 @@ import static org.apache.commons.lang3.StringUtils.stripAccents;
 import org.joda.time.DateTime;
 import rc.so.domain.Presenze_Lezioni_Allievi;
 import static rc.so.util.Utility.LOGAPP;
+import static rc.so.util.Utility.calcolaintervallomillis;
 import static rc.so.util.Utility.conf;
 import static rc.so.util.Utility.estraiEccezione;
 
@@ -1016,11 +1017,12 @@ public class Database {
         }
     }
 
-    public List<Registro_completo> registro_modello6(String idpr) {
+    public List<Registro_completo> registro_modello6(int idpr) {
         List<Registro_completo> registro = new ArrayList<>();
         try {
+            //FAD
             String sql = "SELECT * FROM registro_completo WHERE idprogetti_formativi = " + idpr + " GROUP BY ruolo,idutente,data ORDER BY data";
-            try (Statement st = this.c.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            try (Statement st = this.c.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY); ResultSet rs = st.executeQuery(sql)) {
                 while (rs.next()) {
 
                     long orerend = rs.getLong(21);
@@ -1048,6 +1050,85 @@ public class Database {
                             orerend,
                             rs.getInt(23));
                     registro.add(rc);
+                }
+            }
+
+            //PRESENZA
+            String sql1 = "SELECT * FROM presenzelezioni p, progetti_formativi f, lezioni_modelli lm, lezione_calendario lc , docenti d "
+                    + " WHERE d.iddocenti=p.iddocente AND lc.id_lezionecalendario=lm.id_lezionecalendario AND lm.id_lezionimodelli=p.idlezioneriferimento AND "
+                    + " p.idprogetto=f.idprogetti_formativi AND p.idprogetto = " + idpr + " ORDER BY p.datalezione,p.orainizio;";
+
+            try (Statement st1 = this.c.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY); ResultSet rs1 = st1.executeQuery(sql1)) {
+                while (rs1.next()) {
+                    String sql2 = "SELECT * FROM presenzelezioniallievi a, allievi l WHERE a.idallievi=l.idallievi AND a.idpresenzelezioni = "
+                            + rs1.getInt("p.idpresenzelezioni")
+                            + " AND a.convalidata = 1 GROUP BY l.idallievi";
+
+                    try (Statement st2 = this.c.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY); ResultSet rs2 = st2.executeQuery(sql2)) {
+
+                        int numpartecipanti = 0;
+                        while (rs2.next()) {
+                            numpartecipanti++;
+                        }
+                        rs2.beforeFirst();
+
+                        long durata = calcolaintervallomillis(rs1.getString("p.orainizio"), rs1.getString("p.orafine"));
+
+                        String fase = rs1.getString("lc.codice_ud").startsWith("A") ? "A" : "B";
+
+                        int gruppofaseb = fase.equals("A") ? 0 : rs1.getInt("lm.gruppo_faseB");
+
+                        Registro_completo docente = new Registro_completo(0,
+                                idpr,
+                                rs1.getInt("f.idsoggetti_attuatori"),
+                                rs1.getString("f.cip"),
+                                new DateTime(rs1.getDate("p.datalezione").getTime()),
+                                rs1.getString("f.cip") + "_" + fase + "_" + rs1.getString("lc.codice_ud") + "_" + StringUtils.replace(rs1.getString("p.datalezione"), "-", ""),
+                                numpartecipanti,
+                                rs1.getString("p.orainizio"),
+                                rs1.getString("p.orafine"),
+                                durata,
+                                rs1.getString("lc.codice_ud"),
+                                fase,
+                                gruppofaseb,
+                                "DOCENTE",
+                                rs1.getString("d.cognome"),
+                                rs1.getString("d.nome"),
+                                rs1.getString("d.email"),
+                                rs1.getString("p.orainizio"),
+                                rs1.getString("p.orafine"),
+                                durata,
+                                durata,
+                                rs1.getInt("d.iddocenti"));
+                        registro.add(docente);
+
+                        while (rs2.next()) {
+
+                            Registro_completo rc = new Registro_completo(0,
+                                    idpr,
+                                    rs1.getInt("f.idsoggetti_attuatori"),
+                                    rs1.getString("f.cip"),
+                                    new DateTime(rs1.getDate("p.datalezione").getTime()),
+                                    rs1.getString("f.cip") + "_" + fase + "_" + rs1.getString("lc.codice_ud") + "_" + StringUtils.replace(rs1.getString("p.datalezione"), "-", ""),
+                                    numpartecipanti,
+                                    rs1.getString("p.orainizio"),
+                                    rs1.getString("p.orafine"),
+                                    calcolaintervallomillis(rs1.getString("p.orainizio"), rs1.getString("p.orafine")),
+                                    rs1.getString("lc.codice_ud"),
+                                    fase,
+                                    gruppofaseb,
+                                    "ALLIEVO",
+                                    rs2.getString("l.cognome"),
+                                    rs2.getString("l.nome"),
+                                    rs2.getString("l.email"),
+                                    rs2.getString("a.orainizio"),
+                                    rs2.getString("a.orafine"),
+                                    rs2.getLong("a.durata"),
+                                    rs2.getLong("a.durataconvalidata"),
+                                    rs2.getInt("l.idallievi"));
+                            registro.add(rc);
+                        }
+                    }
                 }
             }
 
@@ -1336,10 +1417,10 @@ public class Database {
         }
         return pla;
     }
-    
+
     public List<String> ore_convalidateAllievi(String idallievo) {
         List<String> report = new ArrayList<>();
-        String sql1 = (idallievo == null) ? "SELECT a.idallievi FROM allievi a WHERE a.id_statopartecipazione IN ('15','16','17')" 
+        String sql1 = (idallievo == null) ? "SELECT a.idallievi FROM allievi a WHERE a.id_statopartecipazione IN ('15','16','17','18','19')"
                 : "SELECT a.idallievi FROM allievi a WHERE a.idallievi=" + idallievo;
 
         try (Statement st1 = this.c.createStatement(); ResultSet rs1 = st1.executeQuery(sql1)) {
@@ -1347,16 +1428,14 @@ public class Database {
                 int idallievi = rs1.getInt(1);
                 String sql2 = "SELECT r.totaleorerendicontabili,r.fase FROM registro_completo r WHERE r.idutente='" + idallievi + "' AND r.ruolo='ALLIEVO'";
 //                String sql3 = "SELECT a.durataconvalidata FROM presenzelezioniallievi a WHERE a.idallievi = '" + idallievi + "' AND a.convalidata=1";
-                String sql3 = "SELECT p.durataconvalidata,z.codice_ud FROM presenzelezioniallievi p, presenzelezioni l, lezione_calendario z "
-                        + "WHERE p.idallievi = '" + idallievi + "' AND p.convalidata=1 AND l.idpresenzelezioni=p.idpresenzelezioni "
-                        + "AND l.idlezioneriferimento=z.id_lezionecalendario ";
 
+                String sql3 = "SELECT a.durataconvalidata FROM presenzelezioniallievi a WHERE a.idallievi = '"
+                        + idallievi + "' AND a.convalidata=1 AND a.durataconvalidata > 0";
                 Long presenze = 0L;
 
                 try (Statement st2 = this.c.createStatement(); ResultSet rs2 = st2.executeQuery(sql2)) {
 
                     while (rs2.next()) {
-                        report.add(idallievi + ";" + rs2.getString(2) + ";" + rs2.getLong(1));
                         presenze += rs2.getLong(1);
                     }
                 }
@@ -1364,7 +1443,6 @@ public class Database {
                 try (Statement st3 = this.c.createStatement(); ResultSet rs3 = st3.executeQuery(sql3)) {
                     while (rs3.next()) {
                         Long conv = rs3.getString(1) == null ? 0L : rs3.getLong(1);
-                        report.add(idallievi + ";" + StringUtils.substring(rs3.getString(2), 0, 1) + ";" + conv);
                         presenze += conv;
                     }
                 }
@@ -1386,4 +1464,40 @@ public class Database {
         return report;
     }
 
+    public String getModalita(Long idpr) {
+
+        String sql1 = "SELECT GROUP_CONCAT(lm.tipolez SEPARATOR ';') AS tipomod,u.fase,u.descrizione,lc.codice_ud,lm.tipolez,lm.gruppo_faseB "
+                + "FROM lezioni_modelli lm, modelli_progetti m, lezione_calendario lc, unita_didattiche u "
+                + "WHERE m.id_progettoformativo = " + idpr + " AND m.id_modello=lm.id_modelli_progetto  AND lc.id_lezionecalendario=lm.id_lezionecalendario "
+                + "AND lc.codice_ud=u.codice GROUP BY u.descrizione,u.fase,lm.gruppo_faseB ORDER BY u.fase,u.ordine";
+
+        AtomicInteger presenza = new AtomicInteger(0);
+        AtomicInteger fad = new AtomicInteger(0);
+
+        try (Statement st1 = this.c.createStatement(); ResultSet rs1 = st1.executeQuery(sql1)) {
+            while (rs1.next()) {
+                String tipomod = rs1.getString(1);
+                if (tipomod.contains("P") && tipomod.contains("F")) {
+                    presenza.addAndGet(1);
+                    fad.addAndGet(1);
+                } else if (tipomod.contains("F")) {
+                    fad.addAndGet(1);
+                } else if (tipomod.contains("P")) {
+                    presenza.addAndGet(1);
+                }
+            }
+
+            if (presenza.get() > 0 && fad.get() > 0) {
+                return "MODALITA' MISTA";
+            } else if (fad.get() > 0) {
+                return "MODALITA' FAD";
+            } else if (presenza.get() > 0) {
+                return "MODALITA' IN PRESENZA";
+            }
+
+        } catch (Exception ex1) {
+            LOGAPP.log(Level.SEVERE, estraiEccezione(ex1));
+        }
+        return "";
+    }
 }
