@@ -89,13 +89,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
 import org.joda.time.Period;
 import org.joda.time.PeriodType;
+import org.json.JSONObject;
 import rc.so.domain.Presenze_Lezioni;
 import rc.so.domain.Presenze_Lezioni_Allievi;
+import rc.so.entity.Item;
 import static rc.so.util.Utility.calcolaMillis;
 import static rc.so.util.Utility.estraiAllieviOK;
 import static rc.so.util.Utility.parseIntR;
@@ -633,7 +636,7 @@ public class OperazioniSA extends HttpServlet {
                 a.setCittadinanza(nazionenascita);
 
                 a.setStato_nascita(getRequestValue(request, "stato"));
-                if (a.getStato_nascita().equals("99")||a.getStato_nascita().equals("100")) {
+                if (a.getStato_nascita().equals("99") || a.getStato_nascita().equals("100")) {
                     a.setComune_nascita(e.getEm().find(
                             Comuni.class, Long.valueOf(getRequestValue(request, "comunenascita"))
                     ));
@@ -1791,7 +1794,7 @@ public class OperazioniSA extends HttpServlet {
 //                    a.setComune_nascita(e.getComunibyIstat(nazionenascita));
 //                }
                 a.setStato_nascita(request.getParameter("stato").equalsIgnoreCase("-") ? "99" : request.getParameter("stato"));
-                
+
                 if (a.getStato_nascita().equals("99")) {
                     a.setComune_nascita(e.getEm().find(Comuni.class,
                             Long.valueOf(request.getParameter("comunenascita"))));
@@ -2223,7 +2226,7 @@ public class OperazioniSA extends HttpServlet {
                     al.setProgetto(null);
                     e.merge(al);
                 }
-                modified = modified ? true : allievi_old.size() > 0;
+                modified = modified ? true : !allievi_old.isEmpty();
                 modified = modified ? true : now_allievi > prev_allievi;
             }
 
@@ -3447,6 +3450,162 @@ public class OperazioniSA extends HttpServlet {
 
     }
 
+    protected void addAula(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String save = getRequestValue(request, "save");
+        String today = new SimpleDateFormat("yyyyMMddHHssSSS").format(new Date());
+        File downloadFile = null;
+        boolean salvataggio = false;
+        if (save.equals("1")) {//MODELLO
+            salvataggio = false;
+        } else if (save.equals("0")) {
+            salvataggio = true;
+        }
+        Database db = new Database(true);
+        List<Item> dispo = db.query_disponibilita_rc();
+        db.closeDB();
+
+        Entity e = new Entity();
+        JsonObject resp = new JsonObject();
+        User us = (User) request.getSession().getAttribute("user");
+        try {
+            e.begin();
+
+            SediFormazione sf = new SediFormazione();
+            sf.setSoggetto(us.getSoggettoAttuatore());
+            sf.setStato("DV");
+            sf.setDenominazione(us.getSoggettoAttuatore().getRagionesociale() + " - SEDE G" + RandomStringUtils.randomNumeric(3));
+
+            Comuni csf = null;
+            try {
+                csf = e.getComune(Long.valueOf(getRequestValue(request, "comune")));
+            } catch (Exception ex2) {
+            }
+            sf.setComune(csf);
+
+            sf.setIndirizzo(new String(getRequestValue(request, "indirizzo").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+
+            sf.setReferente(new String(getRequestValue(request, "responsabile").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            sf.setTelefono(getRequestValue(request, "telresponsabile"));
+            sf.setCellulare(getRequestValue(request, "telresponsabile"));
+            sf.setEmail(getRequestValue(request, "mailresponsabile"));
+
+            JSONObject altridati = new JSONObject();
+            try {
+                int t1 = parseIntR(getRequestValue(request, "titolo"));
+                altridati.put("titolo", dispo.stream().filter(d1 -> d1.getCodice() == (t1)).findAny().get().getDescrizione());
+            } catch (Exception ex2) {
+                altridati.put("titolo", new String(getRequestValue(request, "titolo").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            }
+
+            altridati.put("titolo", new String(getRequestValue(request, "responsabile").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            altridati.put("mq", new String(getRequestValue(request, "mq").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            altridati.put("accreditamento", new String(getRequestValue(request, "accr").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            altridati.put("amministrativo", new String(getRequestValue(request, "responsabileAmm").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            altridati.put("mailamministrativo", new String(getRequestValue(request, "mailresponsabileAmm").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+            altridati.put("telamministrativo", new String(getRequestValue(request, "telresponsabileAmm").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
+
+            String path = e.getPath("pathDocSA_Prg").replace("@rssa",
+                    us.getSoggettoAttuatore().getId().toString()).replace("@folder",
+                    "RQ");
+
+            File dir = new File(path);
+            createDir(path);
+
+            //CREA DOCUMENTO
+            if (salvataggio) {
+                String qrcrop = e.getPath("qr_crop");
+
+                boolean all1OK;
+                String erroreall1OK = "RICHIESTA ACCREDITAMENTO AULA ERRATA. CONTROLLARE.";
+
+                try {
+                    TipoDoc richiesta = e.getEm().find(TipoDoc.class, 38L);
+                    Part p = request.getPart("doc_" + richiesta.getId());
+                    String ext1 = p.getSubmittedFileName().substring(p.getSubmittedFileName().lastIndexOf("."));
+                    String destpath = dir.getAbsolutePath() + File.separator
+                            + Utility.correctName(richiesta.getDescrizione())
+                            + today + ext1;
+                    p.write(destpath);
+                    File pdfdest = new File(destpath);
+                    String res = checkFirmaQRpdfA("ALLEGATOA1", us.getUsername(),
+                            pdfdest, us.getSoggettoAttuatore().getCodicefiscale(), qrcrop);
+                    if (!res.equals("OK")) {
+                        all1OK = false;
+                        erroreall1OK = res;
+                    } else {
+                        all1OK = true;
+                    }
+
+                    if (all1OK) {
+                        altridati.put("pathdoc", destpath.replace("\\", "/"));
+                        sf.setAltridati(altridati.toString());
+                        e.persist(sf);
+                        e.commit();
+                        resp.addProperty("result", true);
+                    } else {
+                        e.rollBack();
+                        resp.addProperty("result", false);
+                        resp.addProperty("message", erroreall1OK);
+                    }
+
+                } catch (Exception ex) {
+                    e.rollBack();
+                    resp.addProperty("result", false);
+                    resp.addProperty("message", "RICHIESTA ACCREDITAMENTO AULA ERRATA. " + ex.getMessage() + ". CONTROLLARE.");
+                    insertTR("E", String.valueOf(((User) request.getSession().getAttribute("user")).getId()), estraiEccezione(ex));
+                }
+            } else {
+
+                sf.setAltridati(altridati.toString());
+
+                String richiesta_accr = dir.getAbsolutePath() + File.separator + "RICH_ACCR_AULA_"
+                        + new SimpleDateFormat("yyyyMMdd").format(new Date()) + ".pdf";
+                e.rollBack();
+
+                downloadFile = Pdf_new.ALLEGATOA1(richiesta_accr, e, us.getUsername(), sf, new DateTime());
+                resp.addProperty("result", true);
+            }
+        } catch (Exception ex) {
+            e.insertTracking(String.valueOf(us.getId()), "OperazioniSA addAula: " + ex.getMessage());
+            resp.addProperty("result", false);
+            resp.addProperty("message", "Errore: non &egrave; stato possibile aggiungere l'aula.");
+        } finally {
+            e.close();
+        }
+
+        if (salvataggio) {
+            response.getWriter()
+                    .write(resp.toString());
+            response.getWriter()
+                    .flush();
+            response.getWriter()
+                    .close();
+        } else {
+            if (downloadFile != null && downloadFile.exists()) {
+                OutputStream outStream;
+                try (FileInputStream inStream = new FileInputStream(downloadFile)) {
+                    String mimeType = probeContentType(downloadFile.toPath());
+                    if (mimeType == null) {
+                        mimeType = "application/octet-stream";
+                    }
+                    response.setContentType(mimeType);
+                    String headerKey = "Content-Disposition";
+                    String headerValue = format("attachment; filename=\"%s\"", downloadFile.getName());
+                    response.setHeader(headerKey, headerValue);
+                    outStream = response.getOutputStream();
+                    byte[] buffer = new byte[4096 * 4096];
+                    int bytesRead;
+                    while ((bytesRead = inStream.read(buffer)) != -1) {
+                        outStream.write(buffer, 0, bytesRead);
+                    }
+                }
+                outStream.close();
+            } else {
+                redirect(request, response, request.getContextPath() + "/404.jsp");
+            }
+        }
+    }
+
     protected void addDocente(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 //        Utility.printRequest(request);
 
@@ -3530,21 +3689,21 @@ public class OperazioniSA extends HttpServlet {
 
                 try {
                     /*Modifica 14 06 21 - Singole Attivita*/
-                    int nroAttivita_max = Integer.parseInt(e.getPath("numAttivita_docente"));
+                    int nroAttivita_max = parseIntR(e.getPath("numAttivita_docente"));
                     List<Attivita_Docente> list_attivita = new ArrayList();
                     Attivita_Docente temp;
                     for (int i = 1; i <= nroAttivita_max; i++) {
-                        if (Integer.parseInt(getRequestValue(request, "attivita_vis_" + i)) == 1) {
+                        if (parseIntR(getRequestValue(request, "attivita_vis_" + i)) == 1) {
                             temp = new Attivita_Docente(
-                                    Integer.parseInt(getRequestValue(request, "tipo_att_" + i)),
+                                    parseIntR(getRequestValue(request, "tipo_att_" + i)),
                                     conversionText(getRequestValue(request, "committente_" + i)),
                                     new SimpleDateFormat("dd/MM/yyyy").parse(getRequestValue(request, "data_inizio_" + i)),
                                     new SimpleDateFormat("dd/MM/yyyy").parse(getRequestValue(request, "data_fine_" + i)),
-                                    Integer.parseInt(getRequestValue(request, "durata_" + i)),
+                                    parseIntR(getRequestValue(request, "durata_" + i)),
                                     getRequestValue(request, "unita_" + i),
-                                    Integer.parseInt(getRequestValue(request, "incarico_" + i)),
-                                    Integer.parseInt(getRequestValue(request, "fonte_" + i)),
-                                    Integer.parseInt(getRequestValue(request, "progr_" + i)),
+                                    parseIntR(getRequestValue(request, "incarico_" + i)),
+                                    parseIntR(getRequestValue(request, "fonte_" + i)),
+                                    parseIntR(getRequestValue(request, "progr_" + i)),
                                     d);
                             list_attivita.add(temp);
                             e.persist(temp);
@@ -4403,7 +4562,7 @@ public class OperazioniSA extends HttpServlet {
                     r1.setId(Integer.parseInt(idl));
                     r1.setIdutente(Integer.parseInt(iduser));
                     r1.setRuolo(ruolo);
-                    r1.setTotaleorerendicontabili(Long.valueOf(getRequestValue(request, paramName)));
+                    r1.setTotaleorerendicontabili(Long.parseLong(getRequestValue(request, paramName)));
 
                     Registro_completo verificasepresente = user_start.stream()
                             .filter(u1 -> u1.getIdutente() == r1.getIdutente()
@@ -4433,9 +4592,9 @@ public class OperazioniSA extends HttpServlet {
                     lez -> {
                         for (String[] user : list_utenti) {
                             if (user[1].equals(lez)) {
-                                if (Long.valueOf(user[3]) > 0) {
+                                if (Long.parseLong(user[3]) > 0) {
                                     numpartecipanti.addAndGet(1);
-                                    if (Boolean.valueOf(user[2])) {
+                                    if (Boolean.parseBoolean(user[2])) {
                                         orafinedocenti.addAndGet(Double.parseDouble(user[3]));
                                     }
                                 }
@@ -4767,197 +4926,136 @@ public class OperazioniSA extends HttpServlet {
             String type = request.getParameter("type");
             response.setContentType("text/html;charset=UTF-8");
             switch (type) {
-                case "editregistro":
+                case "editregistro" ->
                     editregistro(request, response);
-                    break;
-                case "addregistro":
+                case "addregistro" ->
                     addregistro(request, response);
-                    break;
-                case "modifyEmail":
+                case "modifyEmail" ->
                     modifyEmail(request, response);
-                    break;
-                case "downloadregistro":
+                case "downloadregistro" ->
                     downloadregistro(request, response);
-                    break;
-                case "salvamodello3":
+                case "salvamodello3" ->
                     salvamodello3(request, response);
-                    break;
-                case "scaricamodello3":
+                case "scaricamodello3" ->
                     scaricamodello3(request, response);
-                    break;
-                case "salvamodello4":
+                case "salvamodello4" ->
                     salvamodello4(request, response);
-                    break;
-                case "scaricamodello4":
+                case "scaricamodello4" ->
                     scaricamodello4(request, response);
-                    break;
-                case "updtProfile":
+                case "updtProfile" ->
                     updtProfile(request, response);
-                    break;
-                case "checkCF":
+                case "checkCF" ->
                     checkCF(request, response);
-                    break;
-                case "newAllievo":
+                case "newAllievo" ->
                     newAllievo(request, response);
-                    break;
-                case "updtCartaID":
+                case "updtCartaID" ->
                     updtCartaID(request, response);
-                    break;
-                case "updtAllievo":
+                case "updtAllievo" ->
                     updtAllievo(request, response);
-                    break;
-                case "uploadDocIdDocente":
+                case "uploadDocIdDocente" ->
                     uploadDocIdDocente(request, response);
-                    break;
-                case "uploadCurriculumDocente":
+                case "uploadCurriculumDocente" ->
                     uploadCurriculumDocente(request, response);
-                    break;
-                case "newProgettoFormativo":
+                case "newProgettoFormativo" ->
                     newProgettoFormativo(request, response);
-                    break;
-                case "modifyDoc":
+                case "modifyDoc" ->
                     modifyDoc(request, response);
-                    break;
-                case "uploadDocPrg":
+                case "uploadDocPrg" ->
                     uploadDocPrg(request, response);
-                    break;
-                case "modifyPrg":
+                case "modifyPrg" ->
                     modifyPrg(request, response);
-                    break;
-                case "modifyDocenti":
+                case "modifyDocenti" ->
                     modifyDocenti(request, response);
-                    break;
-                case "goNext":
+                case "goNext" ->
                     goNext(request, response);
-                    break;
-                case "setEsitoAllievo":
+                case "setEsitoAllievo" ->
                     setEsitoAllievo(request, response);
-                    break;
-                case "uploadRegistro":
+                case "uploadRegistro" ->
                     uploadRegistro(request, response);
-                    break;
-                case "modifyRegistro":
+                case "modifyRegistro" ->
                     modifyRegistro(request, response);
-                    break;
-                case "getTotalHoursRegistriByAllievo":
+                case "getTotalHoursRegistriByAllievo" ->
                     getTotalHoursRegistriByAllievo(request, response);
-                    break;
-                case "uploadDocPrg_FaseB":
+                case "uploadDocPrg_FaseB" ->
                     uploadDocPrg_FaseB(request, response);
-                    break;
-                case "modifyDocPrg_FaseB":
+                case "modifyDocPrg_FaseB" ->
                     modifyDocPrg_FaseB(request, response);
-                    break;
-                case "uploadRegistrioAula":
+                case "uploadRegistrioAula" ->
                     uploadRegistrioAula(request, response);
-                    break;
-                case "modifyRegistrioAula":
+                case "modifyRegistrioAula" ->
                     modifyRegistrioAula(request, response);
-                    break;
-                case "checkEmail":
+                case "checkEmail" ->
                     checkEmail(request, response);
-                    break;
-                case "updtCartaIDAD":
+                case "updtCartaIDAD" ->
                     updtCartaIDAD(request, response);
-                    break;
-                case "getCodiceCatastaleComune":
+                case "getCodiceCatastaleComune" ->
                     getCodiceCatastaleComune(request, response);
-                    break;
-                case "deleteRegister":
+                case "deleteRegister" ->
                     deleteRegister(request, response);
-                    break;
-                case "sendAsk":
+                case "sendAsk" ->
                     sendAsk(request, response);
-                    break;
-                case "uploadLezione":
+                case "uploadLezione" ->
                     uploadLezione(request, response);
-                    break;
-                case "updateLezione":
+                case "updateLezione" ->
                     updateLezione(request, response);
-                    break;
-                case "creaGruppi":
+                case "creaGruppi" ->
                     creaGruppi(request, response);
-                    break;
-                case "manageM2":
+                case "manageM2" ->
                     manageM2(request, response);
-                    break;
-                case "addDocente":
+                case "addDocente" ->
                     addDocente(request, response);
-                    break;
-                case "checkEmail_Docente":
+                case "addAula" ->
+                    addAula(request, response);
+                case "checkEmail_Docente" ->
                     checkEmail_Docente(request, response);
-                    break;
-                case "checkCF_Docente":
+                case "checkCF_Docente" ->
                     checkCF_Docente(request, response);
-                    break;
-                case "manageMembriStaff":
+                case "manageMembriStaff" ->
                     manageMembriStaff(request, response);
-                    break;
-                case "deleteMembroStaff":
+                case "deleteMembroStaff" ->
                     deleteMembroStaff(request, response);
-                    break;
-                case "salvamodello5":
+                case "salvamodello5" ->
                     salvamodello5(request, response);
-                    break;
-                case "concludiPrg":
+                case "concludiPrg" ->
                     concludiPrg(request, response);
-                    break;
-                case "deleteModello5Alunno":
+                case "deleteModello5Alunno" ->
                     deleteModello5Alunno(request, response);
-                    break;
-                case "uploadM5Alunno":
+                case "uploadM5Alunno" ->
                     uploadM5Alunno(request, response);
-                    break;
-                case "scaricaModello5":
+                case "scaricaModello5" ->
                     scaricaModello5(request, response);
-                    break;
-                case "scaricaregistrotemp":
+                case "scaricaregistrotemp" ->
                     scaricaregistrotemp(request, response);
-                    break;
-                case "uploadRegistroComplessivo":
+                case "uploadRegistroComplessivo" ->
                     uploadRegistroComplessivo(request, response);
-                    break;
-                case "scaricamodello6temp":
+                case "scaricamodello6temp" ->
                     scaricamodello6temp(request, response);
-                    break;
-                case "uploadDichiarazioneM6":
+                case "uploadDichiarazioneM6" ->
                     uploadDichiarazioneM6(request, response);
-                    break;
-                case "scaricaModello7":
+                case "scaricaModello7" ->
                     scaricaModello7(request, response);
-                    break;
-                case "abilitaModificaCalendarM3":
+                case "abilitaModificaCalendarM3" ->
                     abilitaModificaCalendarM3(request, response);
-                    break;
-                case "abilitaModificaCalendarM4":
+                case "abilitaModificaCalendarM4" ->
                     abilitaModificaCalendarM4(request, response);
-                    break;
-                case "deleteAllLessons":
+                case "deleteAllLessons" ->
                     deleteAllLessons(request, response);
-                    break;
-                case "deleteByLesson":
+                case "deleteByLesson" ->
                     deleteByLesson(request, response);
-                    break;
-                case "deleteByGroup":
+                case "deleteByGroup" ->
                     deleteByGroup(request, response);
-                    break;
-                case "scaricaModello1":
+                case "scaricaModello1" ->
                     scaricaModello1(request, response);
-                    break;
-                case "uploadModello1":
+                case "uploadModello1" ->
                     uploadModello1(request, response);
-                    break;
-                case "SALVAPRESENZELEZIONE":
+                case "SALVAPRESENZELEZIONE" ->
                     SALVAPRESENZELEZIONE(request, response);
-                    break;
-                case "SCARICAREGISTROCARTACEOBASE":
+                case "SCARICAREGISTROCARTACEOBASE" ->
                     SCARICAREGISTROCARTACEOBASE(request, response);
-                    break;
-                case "SCARICAREGISTROCARTACEO":
+                case "SCARICAREGISTROCARTACEO" ->
                     SCARICAREGISTROCARTACEO(request, response);
-                    break;
-                default:
-                    break;
+                default -> {
+                }
 
             }
         }

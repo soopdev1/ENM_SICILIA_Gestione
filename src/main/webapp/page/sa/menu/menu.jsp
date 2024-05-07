@@ -7,7 +7,7 @@
 <%
     String uri = request.getRequestURI();
     String pageName = uri.substring(uri.lastIndexOf("/") + 1);
-    String home = "", allievi = "", progettiformativi = "", docenti = "", cloud="", faq="";
+    String home = "", allievi = "", progettiformativi = "", docenti = "", cloud="", faq="",aule = "";
 
     switch (pageName) {
         case "indexSoggettoAttuatore.jsp":
@@ -34,6 +34,10 @@
         case "myFAQ.jsp":
         case "allFAQ.jsp":
             faq = "kt-menu__item--open kt-menu__item--here";
+            break;
+        case "newAula.jsp":
+        case "searchAule.jsp":
+            aule = "kt-menu__item--open kt-menu__item--here";
             break;
         default:
             break;
@@ -74,6 +78,7 @@
                     <!--inserire menu qua dentro-->
                     <%@include file="general/allievi.jsp" %>
                     <%@include file="general/docenti.jsp" %>
+                    <%@include file="general/Aule.jsp"%>
                     <%@include file="general/progettiformativi.jsp" %>
                     <%@include file="general/Cloud.jsp" %>
                     <%@include file="general/faq.jsp" %>

@@ -148,30 +148,9 @@
                                             <label><%=a.getIndirizzoresidenza()%> - <%=a.getComune_residenza().getNome()%> (<%=a.getComune_residenza().getProvincia()%>) - <%=a.getComune_residenza().getRegione()%></label>
                                         </div>
                                         <div class="form-group col-md-6">
-                                            <label class="kt-font-danger kt-font-boldest">Gruppo vulnerabilità</label>
-                                            <label><%=a.getTos_gruppovulnerabile().getDescrizione()%></label>
-                                        </div>
-                                        <div class="form-group col-md-6">
                                             <label class="kt-font-danger kt-font-boldest">Titolo di studio</label>
                                             <label><%=a.getTitoloStudio().getDescrizione()%></label>
                                         </div>
-                                        <div class="form-group col-md-3">
-                                            <label class="kt-font-danger kt-font-boldest">CPI</label>
-                                            <label><%=a.getCpi().getDescrizione()%></label>
-                                        </div>
-                                        <div class="form-group col-md-3">
-                                            <label class="kt-font-danger kt-font-boldest">Data Iscrizione CPI</label>
-                                            <label><%=Utility.sdfITA.format(a.getDatacpi())%></label>
-                                        </div>
-                                        <div class="form-group col-md-3">
-                                            <label class="kt-font-danger kt-font-boldest">Condizione professionale</label>
-                                            <label><%=a.getCondizione_mercato().getDescrizione()%></label>
-                                        </div>
-                                        <div class="form-group col-md-3">
-                                            <label class="kt-font-danger kt-font-boldest">Tipo Finanziamento (GOL/PATTO)</label>
-                                            <label><%=a.getTos_tipofinanziamento()%></label>
-                                        </div>
-                                        
                                     </div>
                                     <div class="row col-md-12">
                                         <hr>

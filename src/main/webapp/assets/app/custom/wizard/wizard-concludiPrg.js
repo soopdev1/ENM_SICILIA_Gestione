@@ -42,7 +42,7 @@ var KTWizard1 = function () {
                 KTUtil.scrollTop();
             }, 300);
         });
-    }
+    };
 
     var initSubmit = function () {
         var btn = formEl.find('[data-ktwizard-type="action-submit"]');
@@ -71,7 +71,7 @@ var KTWizard1 = function () {
                 });
             }
         });
-    }
+    };
 
     return {
         init: function () {

@@ -452,7 +452,7 @@
                                                                                                 <label class="kt-font-danger kt-font-boldest valobbl_<%=a.getId()%>">*</label>
                                                                                                 <div class="dropdown bootstrap-select form-control kt-" 
                                                                                                      id="tipo_misura_<%=a.getId()%>_div" style="padding: 0;">
-                                                                                                    <select class="form-control kt-select2-general obbligatory" 
+                                                                                                    <select class="form-control kt-select2-general" 
                                                                                                             id="tipo_misura_<%=a.getId()%>" name="tipo_misura_<%=a.getId()%>"
                                                                                                             style="width: 100%">
                                                                                                         <option selected value="-">Seleziona</option>
@@ -473,7 +473,7 @@
                                                                                                 <label class="kt-font-danger kt-font-boldest valobbl_<%=a.getId()%>">*</label>
                                                                                                 <div class="dropdown bootstrap-select form-control kt-" 
                                                                                                      id="si_mot_misura_<%=a.getId()%>_div" style="padding: 0;">
-                                                                                                    <select class="form-control kt-select2-general obbligatory" 
+                                                                                                    <select class="form-control kt-select2-general" 
                                                                                                             id="si_mot_misura_<%=a.getId()%>" name="si_mot_misura_<%=a.getId()%>"
                                                                                                             style="width: 100%">
                                                                                                         <option selected value="-">Seleziona</option>
@@ -736,7 +736,6 @@
         <script src="<%=src%>/assets/vendors/general/perfect-scrollbar/dist/perfect-scrollbar.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/vendors/general/sticky-js/dist/sticky.min.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/demo/default/base/scripts.bundle.js" type="text/javascript"></script>
-        <script src="<%=src%>/assets/app/bundle/app.bundle.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/app/bundle/app.bundle.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/vendors/general/sweetalert2/dist/sweetalert2.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/app/custom/general/components/extended/blockui1.33.js" type="text/javascript"></script>

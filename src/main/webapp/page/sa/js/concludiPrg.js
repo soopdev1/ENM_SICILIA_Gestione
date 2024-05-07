@@ -318,12 +318,15 @@ function checkObblFields_Allievo(id) {
             $(this).removeClass("is-valid").removeClass("is-invalid");
         }
     });
+
     $('select.obbligatory[id$=' + id + ']').each(function () {
-        if ($(this).val() === '' || $(this).val() === '-' || $(this).val() === null) {
-            err = true;
-            $('#' + this.id + '_div').removeClass("is-valid-select").addClass("is-invalid-select");
-        } else {
-            $('#' + this.id + '_div').removeClass("is-invalid-select").addClass("is-valid-select");
+        if (!($(this).prop("id") + "").includes("step3")) {
+            if ($(this).val() === '' || $(this).val() === '-' || $(this).val() === null) {
+                err = true;
+                $('#' + this.id + '_div').removeClass("is-valid-select").addClass("is-invalid-select");
+            } else {
+                $('#' + this.id + '_div').removeClass("is-invalid-select").addClass("is-valid-select");
+            }
         }
     });
     //Check radio SI/NO
@@ -343,7 +346,6 @@ function checkObblFields_Allievo(id) {
             err = true;
         }
     });
-
     return err;
 }
 
@@ -417,7 +419,7 @@ $('a[id^=rendiconta_]').on('click', function () {
                 let misura_si_motivazione = $('#si_mot_misura_' + idal).val();
 
                 showLoad();
-                
+
                 let fdata = new FormData();
                 fdata.append("id_allievo", idal);
                 fdata.append("grado_completezza", grado_completezza);
@@ -437,7 +439,7 @@ $('a[id^=rendiconta_]').on('click', function () {
                 fdata.append("doc", $('#doc_' + idal)[0].files[0]);
                 fdata.append("domanda_ammissione", $('#domanda_a_' + idal).is(":checked"));
                 fdata.append("doc_modello7", $('#m7_' + idal)[0].files[0]);
-                
+
                 $.ajax({
                     type: "POST",
                     url: context + '/OperazioniSA?type=salvamodello5',
@@ -670,8 +672,9 @@ function loadInformazioniStep3() {
         async: false,
         url: context + "/QuerySA?type=loadInfoM6&id=" + $('#pf').val(),
         success: function (resp) {
-            if (resp !== null)
+            if (resp !== null) {
                 temp = JSON.parse(resp);
+            }
         }
     });
     return temp;
@@ -752,12 +755,25 @@ $('button[id^=dichiarazione_]').click(function () {
 
 
 function misuraindividuata(idal) {
+    $('#no_mot_misura_' + idal + '_div').removeClass("is-valid-select").removeClass("is-invalid-select");
+    $('#den_misura_si_' + idal).removeClass("is-valid").removeClass("is-invalid");
+    $('#tipo_misura_' + idal + '_div').removeClass("is-valid-select").removeClass("is-invalid-select");
+    $('#si_mot_misura_' + idal + '_div').removeClass("is-valid-select").removeClass("is-invalid-select");
+
     var misura = $('input[type=radio][name=check_misura_' + idal + ']:checked').val();
     if (misura === "NO") {
         $('#MISURANO_' + idal).toggle(true);
         $('#MISURASI_' + idal).toggle(false);
+        $('#no_mot_misura_' + idal).removeClass("obbligatory").addClass("obbligatory");
+        $('#den_misura_si_' + idal).removeClass("obbligatory");
+        $('#tipo_misura_' + idal).removeClass("obbligatory");
+        $('#si_mot_misura_' + idal).removeClass("obbligatory");
     } else {
         $('#MISURASI_' + idal).toggle(true);
         $('#MISURANO_' + idal).toggle(false);
+        $('#no_mot_misura_' + idal).removeClass("obbligatory");
+        $('#den_misura_si_' + idal).removeClass("obbligatory").addClass("obbligatory");
+        $('#tipo_misura_' + idal).removeClass("obbligatory").addClass("obbligatory");
+        $('#si_mot_misura_' + idal).removeClass("obbligatory").addClass("obbligatory");
     }
 }

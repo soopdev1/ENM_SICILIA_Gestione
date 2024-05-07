@@ -6,7 +6,6 @@
 package rc.so.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Splitter;
 import com.google.common.primitives.Ints;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
@@ -29,7 +28,6 @@ import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.signatures.PdfPKCS7;
 import com.itextpdf.signatures.SignatureUtil;
-import rc.so.db.Action;
 import static rc.so.db.Action.insertTR;
 import rc.so.db.Database;
 import rc.so.db.Entity;
@@ -48,11 +46,9 @@ import rc.so.domain.TipoDoc;
 import rc.so.domain.TipoDoc_Allievi;
 import rc.so.domain.TitoliStudio;
 import rc.so.entity.Item;
-import rc.so.entity.MappaturaId;
 import rc.so.entity.OreId;
 import rc.so.entity.OutputId;
 import static rc.so.util.Utility.checkPDF;
-import static rc.so.util.Utility.convertToHours_R;
 import static rc.so.util.Utility.createDir;
 import static rc.so.util.Utility.estraiEccezione;
 import static rc.so.util.Utility.estraiSessodaCF;
@@ -77,7 +73,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import static java.util.Arrays.asList;
 import java.util.Calendar;
 import static java.util.Calendar.getInstance;
 import java.util.Collection;
@@ -120,7 +115,8 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.Store;
 import org.joda.time.DateTime;
-import rc.so.domain.Revisori;
+import org.json.JSONObject;
+import rc.so.domain.SediFormazione;
 import static rc.so.util.Utility.parseDouble;
 import static rc.so.util.Utility.sd1;
 
@@ -390,6 +386,21 @@ public class Pdf_new {
         }
         return null;
     }
+    public static File ALLEGATOA1(
+            String pathdest,
+            Entity e,
+            String username,
+            SediFormazione sf,
+            DateTime dataconsegna) {
+        File out1 = ALLEGATOA1_BASE(pathdest, e, username, sf, dataconsegna);
+        if (out1 != null) {
+            File out2 = convertPDFA(out1, "ALLEGATOA1", e);
+            if (out2 != null) {
+                return out2;
+            }
+        }
+        return null;
+    }
 
     public static File CERTIFICAZIONEASSENZA(
             Entity e,
@@ -548,6 +559,88 @@ public class Pdf_new {
             if (checkPDF(pdfOut)) {
                 return pdfOut;
             }
+        } catch (Exception ex) {
+            e.insertTracking("ERROR SYSTEM ", estraiEccezione(ex));
+        }
+        return null;
+    }
+
+    private static File ALLEGATOA1_BASE(
+            String pathdest,
+            Entity e,
+            String username,
+            SediFormazione sf,
+            DateTime dataconsegna) {
+
+        try {
+
+            TipoDoc p = e.getEm().find(TipoDoc.class, 38L);
+            String contentb64 = p.getModello();
+
+            File pdfOut;
+            if (pathdest == null) {
+                String pathtemp = e.getPath("pathtemp");
+                createDir(pathtemp);
+                pdfOut = new File(pathtemp
+                        + username + "_"
+                        + StringUtils.deleteWhitespace(sf.getSoggetto().getRagionesociale()) + "_"
+                        + dataconsegna.toString("ddMMyyyyHHmmSSS") + ".A1.pdf");
+            } else {
+                pdfOut = new File(pathdest);
+            }
+
+            try (InputStream is = new ByteArrayInputStream(decodeBase64(contentb64)); PdfReader reader = new PdfReader(is); PdfWriter writer = new PdfWriter(pdfOut); PdfDocument pdfDoc = new PdfDocument(reader, writer)) {
+                PdfAcroForm form = getAcroForm(pdfDoc, true);
+                form.setGenerateAppearance(true);
+                Map<String, PdfFormField> fields = form.getAllFormFields();
+
+                //PAG.1
+                setFieldsValue(form, fields, "NOMESA", sf.getSoggetto().getRagionesociale().toUpperCase());
+                setFieldsValue(form, fields, "DD", sf.getSoggetto().getDd());
+                setFieldsValue(form, fields, "COGNOME", sf.getSoggetto().getCognome().toUpperCase());
+                setFieldsValue(form, fields, "NOME", sf.getSoggetto().getNome().toUpperCase());
+                setFieldsValue(form, fields, "CARICA", sf.getSoggetto().getCarica().toUpperCase());
+
+                setFieldsValue(form, fields, "regioneaula1", sf.getComune().getRegione().toUpperCase());
+                setFieldsValue(form, fields, "provincia1", sf.getComune().getNome_provincia().toUpperCase());
+                setFieldsValue(form, fields, "citta1", sf.getComune().getNome().toUpperCase());
+                setFieldsValue(form, fields, "indirizzo1", sf.getIndirizzo().toUpperCase());
+
+                setFieldsValue(form, fields, "responsabile1", sf.getReferente().toUpperCase());
+                setFieldsValue(form, fields, "mailresponsabile1", sf.getEmail().toLowerCase());
+                setFieldsValue(form, fields, "telresponsabile1", sf.getTelefono());
+
+                if (sf.getAltridati() != null) {
+                    try {
+                        JSONObject ad = new JSONObject(sf.getAltridati());
+                        setFieldsValue(form, fields, "titolo1", ad.getString("titolo").toUpperCase());
+                        setFieldsValue(form, fields, "estremi1", ad.getString("mq").toUpperCase());
+                        setFieldsValue(form, fields, "accreditamento1", ad.getString("accreditamento").toUpperCase());
+                        setFieldsValue(form, fields, "amministrativo1", ad.getString("amministrativo").toUpperCase());
+                        setFieldsValue(form, fields, "mailamministrativo1", ad.getString("mailamministrativo").toLowerCase());
+                        setFieldsValue(form, fields, "telamministrativo1", ad.getString("telamministrativo"));
+                    } catch (Exception ex3) {
+                        e.insertTracking("ERROR SYSTEM ", estraiEccezione(ex3));
+                    }
+                }
+
+                fields.forEach((KEY, VALUE) -> {
+                    form.partialFormFlattening(KEY);
+                });
+
+                form.flattenFields();
+                form.flush();
+
+                BarcodeQRCode barcode = new BarcodeQRCode(username + " / ALLEGATOA1 / "
+                        + dataconsegna.toString("ddMMyyyyHHmmSSS"));
+                printbarcode(barcode, pdfDoc);
+
+            }
+
+            if (checkPDF(pdfOut)) {
+                return pdfOut;
+            }
+
         } catch (Exception ex) {
             e.insertTracking("ERROR SYSTEM ", estraiEccezione(ex));
         }
@@ -813,15 +906,10 @@ public class Pdf_new {
             List<Allievi> allievi_totali = e.getAllieviProgettiFormativiAll(pf);
             int allieviOK = Utility.allieviOK(p.getId(), allievi_totali);
 
-            List<Allievi> allievi_faseB = Utility.allievi_fb(p.getId(), e.getAllieviProgettiFormativi(pf));
             List<Docenti> docenti_tab = Utility.docenti_A(e, pf);
             String coeff_fa = e.getPath("coeff.allievo.fasea");
             String coeff_fb = e.getPath("coeff.allievo.faseb");
             Map<String, String> fasceDocenti = Utility.mapCoeffDocenti(e.getPath("coeff.docente.a"), e.getPath("coeff.docente.b"), e.getPath("coeff.docente.c"));
-
-//            String coeff_fasciaA = e.getPath("coeff.docente.a");
-//            String coeff_fasciaB = e.getPath("coeff.docente.b");
-//            String coeff_fasciaC = e.getPath("coeff.docente.c");
 
             File pdfOut = new File(startpath + username + "_"
                     + getOnlyStrings(sa.getRagionesociale()) + "_"

@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.persistence.TypedQuery;
 import static org.apache.commons.io.FilenameUtils.separatorsToSystem;
+import rc.so.entity.Item;
 
 /**
  *
@@ -401,6 +402,13 @@ public class Action {
         out.add(new String[]{"16200000", "4h 30m"});
         out.add(new String[]{"18000000", "5h"});
         return out;
+    }
+    
+    public static List<Item> disponibilita() {
+        Database db = new Database(true);
+        List<Item> rc = db.query_disponibilita_rc();
+        db.closeDB();
+        return rc;
     }
 
 }

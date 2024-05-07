@@ -187,6 +187,47 @@ public class OperazioniMicro extends HttpServlet {
         response.getWriter().close();
     }
 
+    protected void scaricamodelloa1(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        File downloadFile = null;
+        try {
+            Entity e = new Entity();
+            String aula = getRequestValue(request, "aula");
+            SediFormazione sf = e.getEm().find(SediFormazione.class, Long.valueOf(aula));
+            
+            if(sf.getAltridati()!=null){
+                 JSONObject ad = new JSONObject(sf.getAltridati());
+                 downloadFile = new File(ad.getString("pathdoc"));
+            }
+            
+        } catch (Exception ex) {
+            insertTR("E", String.valueOf(((User) request.getSession().getAttribute("user")).getId()), estraiEccezione(ex));
+        }
+        
+        if (downloadFile != null && downloadFile.exists()) {
+            OutputStream outStream;
+            try (FileInputStream inStream = new FileInputStream(downloadFile)) {
+                String mimeType = probeContentType(downloadFile.toPath());
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
+                response.setContentType(mimeType);
+                String headerKey = "Content-Disposition";
+                String headerValue = format("attachment; filename=\"%s\"", downloadFile.getName());
+                response.setHeader(headerKey, headerValue);
+                outStream = response.getOutputStream();
+                byte[] buffer = new byte[4096 * 4096];
+                int bytesRead;
+                while ((bytesRead = inStream.read(buffer)) != -1) {
+                    outStream.write(buffer, 0, bytesRead);
+                }
+            }
+            outStream.close();
+        } else {
+            redirect(request, response, request.getContextPath() + "/404.jsp");
+        }
+    }
+    
     protected void SCARICAREGISTROCARTACEO(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -2838,6 +2879,8 @@ public class OperazioniMicro extends HttpServlet {
                     SCARICAREGISTROCARTACEO(request, response);
                 case "CONVALIDAPRESENZEALLIEVO" ->
                     CONVALIDAPRESENZEALLIEVO(request, response);
+                case "scaricamodelloa1" ->
+                    scaricamodelloa1(request, response);
                 default -> {
                 }
             }

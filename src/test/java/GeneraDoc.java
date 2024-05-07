@@ -29,9 +29,9 @@ public class GeneraDoc {
         java.util.logging.Logger.getLogger(
                 "org.apache").setLevel(java.util.logging.Level.SEVERE);
 
-        String idpr = "8";
+        String idpr = "5";
 //        String idall = "65";
-        String usernameSA = "TST";
+        String usernameSA = "AMMINISTRAZIONE4";
 
         Entity e = new Entity();
         e.begin();
@@ -116,9 +116,10 @@ public class GeneraDoc {
 //        System.out.println(f7.getPath());
         
         String pathtemp = e.getPath("pathtemp");
-//        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
-        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
-        System.out.println(ch_pdf.getPath());
+        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+//        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+////        System.out.println(ch_pdf.getPath());
+        System.out.println(ev_pdf.getPath());
 
         e.close();
 //        

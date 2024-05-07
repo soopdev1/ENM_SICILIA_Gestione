@@ -334,12 +334,6 @@
                                     }
 
                                     option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalMail(' + row.id + ',\'' + row.email + '\')"><i class="fa fa-envelope"></i> Modifica Email</a>';
-                                    option += '<a class="fancyBoxFullReload dropdown-item" href="modello0.jsp?id=' +
-                                            row.id + '"><i class="fa fa-file"></i> Modello 0</a>';
-
-                                    option += '<a class="fancyBoxFullReload dropdown-item" href="modello0anagr.jsp?id=' +
-                                            row.id + '"><i class="fa fa-user"></i> Anagrafica Allievo</a>';
-
                                     option += '<a class="dropdown-item" href="javascript:void(0);" onclick="uploadDoc(' + row.id + ')"><i class="fa fa-upload"></i> Carica Documentazione Integrativa</a>';
 
                                     option += '</div></div>';

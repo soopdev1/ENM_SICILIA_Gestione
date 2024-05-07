@@ -37,6 +37,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import static java.sql.ResultSet.CONCUR_READ_ONLY;
+import static java.sql.ResultSet.CONCUR_UPDATABLE;
 import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -1021,7 +1022,7 @@ public class Database {
         List<Registro_completo> registro = new ArrayList<>();
         try {
             //FAD
-            String sql = "SELECT * FROM registro_completo WHERE idprogetti_formativi = " + idpr + " GROUP BY ruolo,idutente,data ORDER BY data";
+            String sql = "SELECT * FROM registro_completo WHERE idprogetti_formativi = " + idpr + " GROUP BY ruolo,idutente,data,gruppofaseb ORDER BY data,gruppofaseb";
             try (Statement st = this.c.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY); ResultSet rs = st.executeQuery(sql)) {
                 while (rs.next()) {
 
@@ -1418,8 +1419,7 @@ public class Database {
         return pla;
     }
 
-    public List<String> ore_convalidateAllievi(String idallievo) {
-        List<String> report = new ArrayList<>();
+    public void ore_convalidateAllievi(String idallievo) {
         String sql1 = (idallievo == null) ? "SELECT a.idallievi FROM allievi a WHERE a.id_statopartecipazione IN ('15','16','17','18','19')"
                 : "SELECT a.idallievi FROM allievi a WHERE a.idallievi=" + idallievo;
 
@@ -1461,7 +1461,6 @@ public class Database {
             LOGAPP.log(Level.SEVERE, estraiEccezione(ex1));
         }
 
-        return report;
     }
 
     public String getModalita(Long idpr) {
@@ -1499,5 +1498,21 @@ public class Database {
             LOGAPP.log(Level.SEVERE, estraiEccezione(ex1));
         }
         return "";
+    }
+    
+    
+    public List<Item> query_disponibilita_rc() {
+        List<Item> out = new ArrayList<>();
+        try {
+            String sql = "SELECT * FROM disponibilita_rc";
+            try ( PreparedStatement ps1 = this.c.prepareStatement(sql, TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);  ResultSet rs1 = ps1.executeQuery()) {
+                while (rs1.next()) {
+                    out.add(new Item(rs1.getInt(1), rs1.getString(2)));
+                }
+            }
+        } catch (Exception ex1) {
+            LOGAPP.log(Level.SEVERE, estraiEccezione(ex1));
+        }
+        return out;
     }
 }

@@ -239,15 +239,8 @@
                                                 row.id + '"><i class="fa fa-edit"></i> Modifica assegnazione Operatore</a>';
 
                                     }
-
-                                    option += '<a class="fancyBoxFullReload dropdown-item" href="modello0.jsp?id=' +
-                                            row.id + '"><i class="fa fa-file"></i> Modello 0</a>';
-
-                                    option += '<a class="fancyBoxFullReload dropdown-item" href="modello0anagr.jsp?id=' +
-                                            row.id + '"><i class="fa fa-user"></i> Anagrafica Allievo</a>';
                                     option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalDocumentAgg(' + row.id + ')"><i class="fa fa-file-alt"></i> Visualizza Documentazione Integrativa</a>';
                                     option += '<a class="dropdown-item" href="javascript:void(0);" onclick="uploadDoc('+ row.id + ')"><i class="fa fa-upload"></i> Carica Documentazione Integrativa</a>';
-
                                     option += '</div></div>';
                                     return option;
                                 }
