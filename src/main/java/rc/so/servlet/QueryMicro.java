@@ -304,7 +304,7 @@ public class QueryMicro extends HttpServlet {
             if (!request.getParameter("regione").equals("-")) {
                 if (!request.getParameter("provincia").equals("-")) {
                     if (!request.getParameter("comune").equals("-")) {//singolo comune
-                        comuni.add((Comuni) e.getEm().find(Comuni.class, Long.parseLong(request.getParameter("comune"))));
+                        comuni.add((Comuni) e.getEm().find(Comuni.class, Long.valueOf(request.getParameter("comune"))));
                     } else {//lista comuni provincia
                         comuni = e.listaComunibyProvincia(request.getParameter("provincia"));
                     }
@@ -426,9 +426,18 @@ public class QueryMicro extends HttpServlet {
                         NONINSERITA.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
                         presenze_t.add(NONINSERITA);
                     } else {
-                        Presenze_Lezioni_Allievi pla = presenze_pr.stream().filter(p1
-                                -> p1.getPresenzelezioni().getIdpresenzelezioni()
-                                        .equals(pl1.getIdpresenzelezioni())).findAny().orElse(null);
+                        Presenze_Lezioni_Allievi pla;
+                        try {
+                            pla = presenze_pr.stream().filter(p1
+                                    -> p1.getPresenzelezioni().getIdpresenzelezioni()
+                                            .equals(pl1.getIdpresenzelezioni())).findAny().orElse(null);
+                        } catch (Exception ex2) {
+                            
+                            ex2.printStackTrace();
+                            
+                            pla = null;
+                        }
+
                         if (pla == null) {
                             Presenze_Lezioni_Allievi ASSENTE = new Presenze_Lezioni_Allievi();
                             ASSENTE.setDatalezione(pl1.getDatalezione());
@@ -437,7 +446,10 @@ public class QueryMicro extends HttpServlet {
                             ASSENTE.setDurataconvalidata(0L);
                             ASSENTE.setConvalidata(false);
                             ASSENTE.setTipolez("IN PRESENZA");
+                            ASSENTE.setOrainizio(temp.getOrainizio());
+                            ASSENTE.setOrafine(temp.getOrafine());
                             ASSENTE.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
+                            ASSENTE.setAllievo(a);
                             presenze_t.add(ASSENTE);
                         } else {
                             pla.setModulo(pl1.getLezioneriferimento().getLezione_calendario().getUnitadidattica().getCodice());
