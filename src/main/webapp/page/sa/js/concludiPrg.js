@@ -281,9 +281,14 @@ function ctrlForm(id) {
     var err = false;
     if ($('#domanda_a_' + id).is(":checked")) {
         err = checkObblFields_Allievo(id) ? true : err;
+        console.log("1 " + err);
         err = !checkRequiredFileAlunno(id) ? true : err;
+        console.log("2 " + err);
+
     }
     err = !checkRequiredM7Alunno(id) ? true : err;
+    console.log("3 " + err);
+
     return !err;
 }
 
@@ -299,19 +304,18 @@ function checkObblFields_Allievo(id) {
     var err = false;
     $('input.obbligatory[id$=' + id + ']').each(function () {
         if (!$(this).is(':disabled')) {
-            if ($(this).val() === '') {
-                err = true;
-                $(this).removeClass("is-valid").addClass("is-invalid");
-            } else {
-                $(this).removeClass("is-invalid").addClass("is-valid");
-                //Valori della tabella possono essere 0.0?
-//                if ($(this).hasClass("ctrl") && $(this).val() == "0.0") {
-//                    err = true;
-//                    $(this).removeClass("is-valid").addClass("is-invalid");
-//                }
-                if ($(this).hasClass("currencymask") && cleanCurrency($(this).val()) === 0) {
+            if (!($(this).prop("id") + "").includes("step3")) {
+                if ($(this).val() === '') {
                     err = true;
+                    console.log($(this));
                     $(this).removeClass("is-valid").addClass("is-invalid");
+                } else {
+                    $(this).removeClass("is-invalid").addClass("is-valid");
+                    if ($(this).hasClass("currencymask") && cleanCurrency($(this).val()) === 0) {
+                        err = true;
+                        console.log($(this));
+                        $(this).removeClass("is-valid").addClass("is-invalid");
+                    }
                 }
             }
         } else {
@@ -323,6 +327,8 @@ function checkObblFields_Allievo(id) {
         if (!($(this).prop("id") + "").includes("step3")) {
             if ($(this).val() === '' || $(this).val() === '-' || $(this).val() === null) {
                 err = true;
+                console.log($(this));
+
                 $('#' + this.id + '_div').removeClass("is-valid-select").addClass("is-invalid-select");
             } else {
                 $('#' + this.id + '_div').removeClass("is-invalid-select").addClass("is-valid-select");
@@ -343,6 +349,8 @@ function checkObblFields_Allievo(id) {
             $(label).removeClass("kt-radio-invalid").addClass("kt-radio-valid");
         } else {
             $(label).removeClass("kt-radio-valid").addClass("kt-radio-invalid");
+            console.log($(this));
+
             err = true;
         }
     });

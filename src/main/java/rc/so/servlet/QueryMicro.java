@@ -405,7 +405,6 @@ public class QueryMicro extends HttpServlet {
 
             //MODELLO 3
             List<LezioneCalendario> lezioniCalendario = e.getLezioniByModello(3);
-//            List<LezioneCalendario> grouppedByLezione = Utility.grouppedByLezione(lezioniCalendario);
             ModelliPrg m3 = Utility.filterModello3(a.getProgetto().getModelli());
             List<Lezioni_Modelli> lezioni = m3.getLezioni();
             List<Date> fadgiàinserite = new ArrayList<>();
@@ -426,16 +425,14 @@ public class QueryMicro extends HttpServlet {
                         NONINSERITA.setFase(temp.getLezione_calendario().getUnitadidattica().getFase());
                         presenze_t.add(NONINSERITA);
                     } else {
-                        Presenze_Lezioni_Allievi pla;
-                        try {
-                            pla = presenze_pr.stream().filter(p1
-                                    -> p1.getPresenzelezioni().getIdpresenzelezioni()
-                                            .equals(pl1.getIdpresenzelezioni())).findAny().orElse(null);
-                        } catch (Exception ex2) {
-                            
-                            ex2.printStackTrace();
-                            
-                            pla = null;
+                        Presenze_Lezioni_Allievi pla = null;
+                        for(Presenze_Lezioni_Allievi l1 : presenze_pr){
+                            if (l1.getPresenzelezioni() != null && l1.getPresenzelezioni().getIdpresenzelezioni() != null) {
+                                if(l1.getPresenzelezioni().getIdpresenzelezioni().equals(pl1.getIdpresenzelezioni())){
+                                    pla = l1;
+                                    break;
+                                }
+                            }
                         }
 
                         if (pla == null) {
@@ -964,7 +961,9 @@ public class QueryMicro extends HttpServlet {
             if (m5 != null) {
                 item = new JSONObject();
                 item.put("id", a.getId());
-                item.put("bp", m5.getBusinessplan_path());
+                if(m5.isBusinessplan_presente()){
+                    item.put("bp", m5.getBusinessplan_path());
+                }
                 array.put(item);
             }
         }

@@ -38,6 +38,7 @@ import javax.persistence.Transient;
     @NamedQuery(name = "a.bySoggettoAttuatoreNoProgettoAttivi", query = "SELECT a FROM Allievi a WHERE a.soggetto=:soggetto and a.progetto=null AND a.statopartecipazione.id IN ('10','12','13','14','15','18','19') AND a.stato='A'"),
     @NamedQuery(name = "a.byProgetto", query = "SELECT a FROM Allievi a WHERE a.progetto=:progetto AND a.statopartecipazione.id IN ('13','14','15','18','19')"),
     @NamedQuery(name = "a.byProgettoAll", query = "SELECT a FROM Allievi a WHERE a.progetto=:progetto"),
+    @NamedQuery(name = "a.byProgettoOK", query = "SELECT a FROM Allievi a WHERE a.progetto=:progetto AND a.importo > 0 ORDER BY a.cognome"),
     @NamedQuery(name = "a.byEmail", query = "SELECT a FROM Allievi a WHERE a.email=:email AND a.statopartecipazione.id IN ('10','12','13','14','15','18','19')"),
     @NamedQuery(name = "allievi.daassegnare", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id='10'"),
     @NamedQuery(name = "allievi.assegnatisoggetto", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id IN ('12','13') AND a.soggetto=:soggetto and a.progetto=null"),

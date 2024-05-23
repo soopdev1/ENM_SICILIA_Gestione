@@ -7,11 +7,17 @@ import rc.so.domain.TipoDoc_Allievi;
 import rc.so.util.Pdf_new;
 import rc.so.util.Utility;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.joda.time.DateTime;
 import rc.so.domain.Allievi;
 import rc.so.domain.Lezioni_Modelli;
 import rc.so.domain.ModelliPrg;
+import rc.so.domain.SediFormazione;
 
 
 /*
@@ -29,9 +35,9 @@ public class GeneraDoc {
         java.util.logging.Logger.getLogger(
                 "org.apache").setLevel(java.util.logging.Level.SEVERE);
 
-        String idpr = "5";
+        String idpr = "108";
 //        String idall = "65";
-        String usernameSA = "AMMINISTRAZIONE4";
+        String usernameSA = "TST";
 
         Entity e = new Entity();
         e.begin();
@@ -43,32 +49,32 @@ public class GeneraDoc {
 //            Lezioni_Modelli lm = e.getEm().find(Lezioni_Modelli.class, 2L);
 //            File f1 = Pdf_new.REGISTROCARTACEO(e, "rcc", lm, new DateTime());
 ////        ModelliPrg m3 = Utility.filterModello3(prg.getModelli());
-////        ModelliPrg m4 = Utility.filterModello4(prg.getModelli());
-////        File f1 = Pdf_new.MODELLO0(e, "30", al);
-//        System.out.println(f1.getPath());
-//        File f2 = Pdf_new.MODELLO2(e,
-//                            "1",
-//                            usernameSA, prg.getSoggetto(),
-//                            prg,
-//                            prg.getAllievi().stream().filter(a1-> a1.getStatopartecipazione().getId().equals("01")).collect(Collectors.toList()) , new DateTime(), true);
-//        
-//        System.out.println(f2.getPath());
-//        File f3 = Pdf_new.MODELLO3(e,
-//                            usernameSA,
-//                            prg.getSoggetto(),
-//                            prg,
-//                            prg.getAllievi().stream().filter(p1 -> p1.getStatopartecipazione().getId().equals("01")).collect(Collectors.toList()),
-//                            prg.getDocenti(), m3.getLezioni(), prg.getStaff_modelli().stream().filter(m -> m.getAttivo() == 1).collect(Collectors.toList()),
-//                            new DateTime(), true);        
-//        System.out.println(f3.getPath());
-//        Collections.sort(m4.getLezioni(), (emp1, emp2) -> emp1.getGiorno().compareTo(emp2.getGiorno()));
+//        ModelliPrg m4 = Utility.filterModello4(prg.getModelli());
+//////        File f1 = Pdf_new.MODELLO0(e, "30", al);
+////        System.out.println(f1.getPath());
+////        File f2 = Pdf_new.MODELLO2(e,
+////                            "1",
+////                            usernameSA, prg.getSoggetto(),
+////                            prg,
+////                            prg.getAllievi().stream().filter(a1-> a1.getStatopartecipazione().getId().equals("01")).collect(Collectors.toList()) , new DateTime(), true);
+////        
+////        System.out.println(f2.getPath());
+////        File f3 = Pdf_new.MODELLO3(e,
+////                            usernameSA,
+////                            prg.getSoggetto(),
+////                            prg,
+////                            prg.getAllievi().stream().filter(p1 -> p1.getStatopartecipazione().getId().equals("01")).collect(Collectors.toList()),
+////                            prg.getDocenti(), m3.getLezioni(), prg.getStaff_modelli().stream().filter(m -> m.getAttivo() == 1).collect(Collectors.toList()),
+////                            new DateTime(), true);        
+////        System.out.println(f3.getPath());
+////        Collections.sort(m4.getLezioni(), (emp1, emp2) -> emp1.getGiorno().compareTo(emp2.getGiorno()));
 //        File f4 = Pdf_new.MODELLO4(e, usernameSA, prg.getSoggetto(), prg, prg.getAllievi().stream().filter(p1
-//                -> p1.getStatopartecipazione().getId().equals("01")).collect(Collectors.toList()),
+//                -> p1.getStatopartecipazione().getId().equals("15")).collect(Collectors.toList()),
 //                prg.getDocenti(),
 //                m4.getLezioni(),
 //                prg.getStaff_modelli().stream().filter(m
 //                -> m.getAttivo() == 1).collect(Collectors.toList()), new DateTime(), true);
-//
+////
 //        System.out.println(f4.getPath());
 //        Map<Long, Long> allievi_m5 = Utility.allieviM5_loaded(e.getM5Loaded_byPF(prg));
 //        prg.getAllievi().stream().filter(al1 -> al1.getStatopartecipazione().getId().equals("01")).forEach(al -> {
@@ -110,16 +116,30 @@ public class GeneraDoc {
 //
 //            System.out.println(f6.getPath());
 //        }
-
 //        Map<Long, Long> oreRendicontabili = Action.OreRendicontabiliAlunni((int) (long) prg.getId());
 //        File f7 = Pdf_new.MODELLO7(e, usernameSA, al, new DateTime(), true);
 //        System.out.println(f7.getPath());
-        
         String pathtemp = e.getPath("pathtemp");
-        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
-//        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
-////        System.out.println(ch_pdf.getPath());
-        System.out.println(ev_pdf.getPath());
+//        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+////        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+//////        System.out.println(ch_pdf.getPath());
+//        System.out.println(ev_pdf.getPath());
+
+        //richiesta accreditamento docente 
+        List<SediFormazione> lsf = new ArrayList<>();
+        lsf.add(e.getEm().find(SediFormazione.class, Long.valueOf("123")));
+        lsf.add(e.getEm().find(SediFormazione.class, Long.valueOf("124")));
+        lsf.add(e.getEm().find(SediFormazione.class, Long.valueOf("125")));
+        lsf.add(e.getEm().find(SediFormazione.class, Long.valueOf("126")));
+        lsf.add(e.getEm().find(SediFormazione.class, Long.valueOf("127")));
+        lsf.add(e.getEm().find(SediFormazione.class, Long.valueOf("128")));
+
+        for (SediFormazione sf : lsf) {
+            String richiesta_accr = pathtemp + File.separator + "RICH_ACCR_AULA_"
+                    + new SimpleDateFormat("yyyyMMdd").format(new Date()) +sf.getSoggetto().getCognome_referente()+ ".pdf";
+            File downloadFile = Pdf_new.ALLEGATOA1(richiesta_accr, e, usernameSA, sf, new DateTime());
+            System.out.println(downloadFile.getPath());
+        }
 
         e.close();
 //        

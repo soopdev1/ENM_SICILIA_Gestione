@@ -493,7 +493,8 @@
                                                                                 </div>
                                                                                     <div class="form-group row">
                                                                                         <div class="col-6">
-                                                                                            <a href="<%=request.getContextPath()%>/OperazioniSA?type=scaricaModello7&iduser=<%=a.getId()%>" target="_blank" class="btn btn-success"><i class="fa fa-user-graduate" style='position: absolute; right: 5rem'></i>&nbsp; Scarica attestato di frequenza (Modello 7)</a>
+                                                                                            <a href="<%=request.getContextPath()%>/OperazioniSA?type=scaricaModello7&iduser=<%=a.getId()%>" 
+                                                                                               target="_blank" class="btn btn-success">Scarica attestato di frequenza (Modello 7)</a>
                                                                                         </div>
                                                                                         <div class="col-6">
                                                                                             <div class="custom-file">

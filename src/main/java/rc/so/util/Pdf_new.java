@@ -503,7 +503,7 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "COMUNESEDE", c_s.getNome());
                     setFieldsValue(form, fields, "PROVINCIASEDE", c_s.getCod_provincia());
 //                    setFieldsValue(form, fields, "CAPSEDE", c_s.getC());
-                    setFieldsValue(form, fields, "INDIRIZZOSEDE", lm.getModello().getProgetto().getSede().getIndirizzo());
+                    setFieldsValue(form, fields, "INDIRIZZOSEDE", lm.getModello().getProgetto().getSedefisica().getIndirizzo());
 
                 }
 
@@ -903,7 +903,7 @@ public class Pdf_new {
             TipoDoc p = e.getEm().find(TipoDoc.class, 37L);
             String contentb64 = p.getModello();
 
-            List<Allievi> allievi_totali = e.getAllieviProgettiFormativiAll(pf);
+            List<Allievi> allievi_totali = e.getAllieviOK(pf);
             int allieviOK = Utility.allieviOK(p.getId(), allievi_totali);
 
             List<Docenti> docenti_tab = Utility.docenti_A(e, pf);
@@ -1512,7 +1512,8 @@ public class Pdf_new {
                                 setFieldsValue(form, fields, "DATAB" + indiceb.get() + "_" + indicigiorniB.get(), lezione);
 
                                 Lezioni_Modelli lm1 = m4.getLezioni().stream().filter(l1 -> new DateTime(l1.getGiorno())
-                                        .toString("dd/MM/yyyy").equals(lezione)).findAny().orElse(null);
+                                        .toString("dd/MM/yyyy").equals(lezione) && indiceb.get() == l1.getGruppo_faseB()).findAny().orElse(null);
+                                
                                 if (lm1 == null) {
                                     setFieldsValue(form, fields, "TIPOB" + indiceb.get() + "_" + indicigiorniB.get(), "-");
                                 } else {
@@ -1590,9 +1591,9 @@ public class Pdf_new {
                                             orarioD.put(indicigiorni.get(), valore + r3.getTotaleorerendicontabili());
                                         }
                                     });
-                                }
+                                }                                
                                 indicigiorni.addAndGet(1);
-
+                                
                             });
 
                             for (int in = 1; in <= orarioD.size(); in++) {

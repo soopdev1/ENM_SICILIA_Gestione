@@ -3497,7 +3497,6 @@ public class OperazioniSA extends HttpServlet {
                 altridati.put("titolo", new String(getRequestValue(request, "titolo").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
             }
 
-            altridati.put("titolo", new String(getRequestValue(request, "responsabile").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
             altridati.put("mq", new String(getRequestValue(request, "mq").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
             altridati.put("accreditamento", new String(getRequestValue(request, "accr").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));
             altridati.put("amministrativo", new String(getRequestValue(request, "responsabileAmm").toUpperCase().getBytes(Charsets.ISO_8859_1), Charsets.UTF_8));

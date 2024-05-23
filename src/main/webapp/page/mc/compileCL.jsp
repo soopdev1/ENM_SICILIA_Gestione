@@ -42,7 +42,7 @@
             Entity e = new Entity();
             String msg = e.getPath("compilaCL.html").replaceAll("\\\\", "/");
             ProgettiFormativi p = e.getEm().find(ProgettiFormativi.class, Long.parseLong(request.getParameter("id")));
-            List<Allievi> allievi_totali = e.getAllieviProgettiFormativiAll(p);
+            List<Allievi> allievi_totali = e.getAllieviOK(p);
             List<Allievi> allievi_faseB = Utility.allievi_fb(p.getId(), e.getAllieviProgettiFormativi(p));
             List<Docenti> docenti_tab = Utility.docenti_A(e, p);
             String coeff_fa = e.getPath("coeff.allievo.fasea");

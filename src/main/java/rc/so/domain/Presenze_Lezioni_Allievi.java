@@ -38,7 +38,8 @@ import javax.persistence.Transient;
     @NamedQuery(name = "presenzelezioni.allievototal",
             query = "SELECT u FROM Presenze_Lezioni_Allievi u WHERE u.allievo=:allievo"),
     @NamedQuery(name = "presenzelezioni.allievo_giornata",
-            query = "SELECT u FROM Presenze_Lezioni_Allievi u WHERE u.presenzelezioni=:presenzelezioni AND u.allievo=:allievo"),})
+            query = "SELECT u FROM Presenze_Lezioni_Allievi u WHERE u.presenzelezioni=:presenzelezioni AND u.allievo=:allievo")
+})
 @Entity
 @Table(name = "presenzelezioniallievi")
 public class Presenze_Lezioni_Allievi implements Serializable {
