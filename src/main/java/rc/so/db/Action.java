@@ -410,5 +410,12 @@ public class Action {
         db.closeDB();
         return rc;
     }
+    
+    public static String getTinyMCE() {
+        Database db = new Database(false);
+        String tiny = db.getPathtemp("tiny.mce");
+        db.closeDB();
+        return tiny;
+    }
 
 }

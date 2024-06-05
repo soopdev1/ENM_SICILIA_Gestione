@@ -529,7 +529,8 @@ public class Pdf_new {
                 setFieldsValue(form, fields, "DOC_CF", lm.getDocente().getCodicefiscale().toUpperCase());
                 setFieldsValue(form, fields, "DOC_RUOLO", "DOCENTE");
 
-                List<Allievi> allievi = lm.getModello().getProgetto().getAllievi().stream().filter(al -> al.getStatopartecipazione().getId()
+                List<Allievi> allievi = lm.getModello().getProgetto().getAllievi().stream().filter(al -> 
+                        al.getStatopartecipazione().getId()
                         .equalsIgnoreCase("13") || al.getStatopartecipazione().getId()
                         .equalsIgnoreCase("14") || al.getStatopartecipazione().getId()
                         .equalsIgnoreCase("15")

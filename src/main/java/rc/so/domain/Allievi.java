@@ -41,7 +41,7 @@ import javax.persistence.Transient;
     @NamedQuery(name = "a.byProgettoOK", query = "SELECT a FROM Allievi a WHERE a.progetto=:progetto AND a.importo > 0 ORDER BY a.cognome"),
     @NamedQuery(name = "a.byEmail", query = "SELECT a FROM Allievi a WHERE a.email=:email AND a.statopartecipazione.id IN ('10','12','13','14','15','18','19')"),
     @NamedQuery(name = "allievi.daassegnare", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id='10'"),
-    @NamedQuery(name = "allievi.assegnatisoggetto", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id IN ('12','13') AND a.soggetto=:soggetto and a.progetto=null"),
+    @NamedQuery(name = "allievi.assegnatisoggetto", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id IN ('12','13','14') AND a.soggetto=:soggetto and a.progetto=null"),
     @NamedQuery(name = "allievi.modello1", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id IN ('13','14') AND a.soggetto=:soggetto and a.progetto=null AND a.stato='A'"),
     @NamedQuery(name = "allievi.attivi", query = "SELECT a FROM Allievi a WHERE a.statopartecipazione.id='13' AND a.progetto=:progetto"),})
 @JsonIgnoreProperties(value = {"documenti"})

@@ -868,9 +868,7 @@
         <script src="<%=src%>/assets/vendors/general/inputmask/dist/inputmask/inputmask.js" type="text/javascript"></script>
         <script src="<%=src%>/assets/vendors/general/inputmask/dist/inputmask/jquery.inputmask.js" type="text/javascript"></script>
         <script src="<%=src%>/resource/jquery.maskMoney.js" type="text/javascript"></script>
-
-        <script src="https://cdn.tiny.cloud/1/x58q84nl0ol5hipr98106p13ns8tn6unummy0pcynuezjrhf/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-
+        <script src="https://cdn.tiny.cloud/1/<%=Action.getTinyMCE()%>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
         <script id="compileCL" src="<%=src%>/page/mc/js/compileCL.js<%="?dummy=" + String.valueOf(new Date().getTime())%>" data-context="<%=request.getContextPath()%>" type="text/javascript"></script>
         <script type="text/javascript">
 
