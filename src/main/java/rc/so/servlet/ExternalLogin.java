@@ -31,6 +31,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import static rc.so.util.Utility.OM;
 
 /**
  *
@@ -105,7 +106,7 @@ public class ExternalLogin extends HttpServlet {
                     String line = "";
                     BufferedReader rd = new BufferedReader(new InputStreamReader(instream));
                     while ((line = rd.readLine()) != null) {
-                        return (User) new ObjectMapper().readValue(line, User.class);
+                        return OM.readValue(line, User.class);
                     }
                 }
             }

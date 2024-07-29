@@ -815,12 +815,12 @@ public class Utility {
         try {
             String out = new DecimalFormat("###,###.#", DecimalFormatSymbols.getInstance(Locale.ITALIAN))
                     .format(BigDecimal.valueOf(f).setScale(2, ROUND_HALF_DOWN)
-                            .doubleValue());            
+                            .doubleValue());
             if (out.startsWith(",0")) {
                 return "0";
             } else {
                 return out;
-            }            
+            }
         } catch (Exception ex) {
             insertTR("E", "SERVICE", estraiEccezione(ex));
         }
@@ -1098,10 +1098,13 @@ public class Utility {
             if (d1 == -1.0) {
                 return -1;
             }
-            long tot = Math.round(d1) * 3600000;
+            BigDecimal bigDecimal = new BigDecimal(d1);
+            bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_EVEN);
+            double d_tot = bigDecimal.doubleValue() * 3600000.00;
+            long tot = Double.valueOf(d_tot).longValue();
             return tot;
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
         return MAX;
     }
@@ -1457,7 +1460,7 @@ public class Utility {
         }
 
     }
-    
+
     public static String roundDoubleAndFormat(double f, boolean zero) {
         String out = "0";
         try {
@@ -1487,5 +1490,12 @@ public class Utility {
         }
     }
     
-    
+    public static final ObjectMapper OM = getOM();
+
+    public static ObjectMapper getOM() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+        objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION, true);
+        return objectMapper;
+    }
 }

@@ -5,7 +5,6 @@
  */
 package rc.so.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import static rc.so.db.Action.insertTR;
 import rc.so.entity.Presenti;
 import static rc.so.util.Utility.estraiEccezione;
@@ -27,6 +26,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import static rc.so.util.Utility.OM;
 
 /**
  *
@@ -149,7 +149,7 @@ public class DocumentiPrg implements Serializable {
     public List<Presenti> getPresenti_list() {
         if (this.presenti != null && !this.presenti.equals("") && this.presenti_list.isEmpty()) {
             try {
-                this.presenti_list = Arrays.asList(new ObjectMapper().readValue(presenti, Presenti[].class));
+                this.presenti_list = Arrays.asList(OM.readValue(presenti, Presenti[].class));
             } catch (Exception ex) {
                 insertTR("E", "SERVICE", estraiEccezione(ex));
             }
@@ -257,7 +257,7 @@ public class DocumentiPrg implements Serializable {
         this.presenti = presenti;
         if (presenti != null && !presenti.equals("")) {
             try {
-                presenti_list = Arrays.asList(new ObjectMapper().readValue(presenti, Presenti[].class));
+                presenti_list = Arrays.asList(OM.readValue(presenti, Presenti[].class));
             } catch (Exception ex) {
                 insertTR("E", "SERVICE", estraiEccezione(ex));
             }

@@ -10,6 +10,7 @@
         response.addHeader("X-Frame-Options", "SAMEORIGIN");
         Entity e = new Entity();
         String mantenance = e.getPath("mantenance");
+        String ferie = e.getPath("ferie");
         //String manuale = e.getPath("manualeSA");
         e.close();
         if (mantenance.equals("Y")) {
@@ -77,7 +78,17 @@
             <div class="kt-grid kt-grid--hor kt-grid--root  kt-login kt-login--v3 kt-login--signin" id="kt_login">
                 <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor" style="background-image: url(assets/media/bg/bg-3.jpg);">
                     <div class="kt-grid__item kt-grid__item--fluid kt-login__wrapper">
+
                         <div class="kt-login__container">
+                            <%if(ferie.equals("SI")){%>
+                            <div class="kt-login__logo">
+                                <div class="alert alert-warning text-justify"><b>
+                                    AVVISIAMO CHE, CAUSA FERIE, DAL 10/08 AL 25/08 (COMPRESI)
+                                    <u>NON POTRANNO SVOLGERSI LEZIONI IN PRESENZA O IN FAD</u>.
+                                    IN CASO CONTRARIO TALI LEZIONI SARANNO ANNULLATE NEL RENDICONTO FINALE.
+                                    </b></div>                            
+                            </div>
+                            <%}%>
                             <div class="kt-login__logo">
                                 <img src="assets/soop/img/SIC1.jpg" alt="" height="100px"/>
                             </div>
@@ -325,7 +336,7 @@
                 title: 'Utenza bloccata',
                 confirmButtonColor: '#363a90'
             });
-            <%}%>           
+            <%}%>
 
             function clickLink(link, target) {
                 var a = document.createElement('a');
@@ -339,7 +350,7 @@
 //$( document ).ready(function() {
 //    alert(heidiDecode('676673756A6D6A7B7B621'));
 //});
-           
+
 
 
         </script>

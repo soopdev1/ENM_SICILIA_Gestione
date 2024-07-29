@@ -87,6 +87,7 @@ var KTDatatablesDataSourceAjaxServer = function () {
                                 row.stato.id === "SOA" || 
                                 row.stato.id === "SOB" || 
                                 row.stato.id === "F" || 
+                                row.stato.id === "FE" || 
                                 row.stato.id === "DVB" || 
                                 row.stato.id === "IV" || 
                                 row.stato.id === "CK" || 
@@ -101,22 +102,15 @@ var KTDatatablesDataSourceAjaxServer = function () {
                             if (row.pdfunico !== null) {
                                 option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalPdfUnicoAllievi(' + row.id + ')"><i class="fa fa-file-pdf" style="margin-top:-2px"></i> Scarica PDF per ANPAL</a>';
                             }
-                            if (row.stato.id === "MA") {
-                                option += '<a class="dropdown-item kt-font-success" href="javascript:void(0);" onclick="swalMappaAllievi(' + row.id + ')"><i class="fa fa-check kt-font-success" style="margin-top:-2px"></i> Mappatura</a>';
-                            } else if (row.stato.id === "IV") {
-                                option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalMappaAllievi(' + row.id + ')"><i class="fa fa-check" style="margin-top:-2px"></i> Mappatura</a>';
+                            if (row.stato.id === "IV") {
                                 option += '<a class="dropdown-item kt-font-success" href="compileCL.jsp?id=' + row.id + '" ><i class="fa fa-file-excel kt-font-success"></i> Compila Checklist Finale</a>';
                             } else if (row.stato.id === "CK") {
-                                option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalMappaAllievi(' + row.id + ')"><i class="fa fa-check" style="margin-top:-2px"></i> Mappatura</a>';
                                 option += '<a class="dropdown-item kt-font-success" href="javascript:void(0);" onclick="sendMailEsito(' + row.id + ')"><i class="flaticon2-envelope kt-font-success" style="margin-top:-2px"></i> Invia Esito a ENM</a>';
                             } else if (row.stato.id === "EVI") {
-                                option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalMappaAllievi(' + row.id + ')"><i class="fa fa-check" style="margin-top:-2px"></i> Mappatura</a>';
                                 option += '<a class="dropdown-item kt-font-success" href="javascript:void(0);" onclick="uploadEsito(' + row.id + ')"><i class="fa fa-upload kt-font-success" style="margin-top:-2px"></i> Upload Esito Firmato</a>';
                             } else if (row.stato.controllare === 1) {
                                 option += '<a class="dropdown-item kt-font-success" href="javascript:void(0);" onclick="valitdatePrg(' + row.id + ',&quot;' + row.stato.id + '&quot;)"><i class="fa fa-check kt-font-success" style="margin-top:-2px"></i> Convalida Progetto</a>';
                                 option += '<a class="dropdown-item kt-font-danger" href="javascript:void(0);" onclick="rejectPrg(' + row.id + ')"><i class="flaticon2-delete kt-font-danger" style="margin-top:-2px"></i> Rigetta Progetto</a>';
-                            } else if (row.stato.id === "CO") {
-                                option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalMappaAllievi(' + row.id + ')"><i class="fa fa-check" style="margin-top:-2px"></i> Mappatura</a>';
                             }
 
 
@@ -324,7 +318,6 @@ var DatatablesAllievi = function () {
                                     }
                                 }
                                 select = select + "</select>";
-
                                 if (row.tipolez === "IN FAD") {
                                     var div = "<form class='kt-form'><div class='row col-md-12'><div class='col-md-8'>" + select
                                             + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.allievo.id + ",1," + row.datalezione + ");' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
@@ -334,7 +327,6 @@ var DatatablesAllievi = function () {
                                             + "</div><div class='col-md-4'><a href='javascript:void(0);' onclick='return validatepresenze(" + row.idpresenzelezioniallievi + ",0,0);' class='btn btn-success'><font color='white'>SALVA</font></a></div></div></form>";
                                     return div;
                                 }
-
                             }
                         }
                     }
@@ -386,7 +378,8 @@ var DatatablesAllievi = function () {
                                 + '</button>'
                                 + '<div class="dropdown-menu dropdown-menu-left">';
                         option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalDocumentAllievo(' + row.id + ');"><i class="fa fa-file-alt"></i> Visualizza Documenti</a>';
-                        if (row.statopartecipazione.id === "9" || row.statopartecipazione.id === "11" || row.statopartecipazione.id === "16") {
+                        if (row.statopartecipazione.id === "9" 
+                                || row.statopartecipazione.id === "11") {
 
                         } else {
                             option += '<a class="dropdown-item" href="javascript:void(0);" onclick="swalPresenzeAllievo(' + row.id + ');"><i class="fa fa-calendar-alt"></i> Visualizza Presenze</a>';
@@ -432,84 +425,9 @@ var DatatablesAllievi = function () {
         });
     };
 
-    var initMappaAllievi = function () {
-        var table = $('#kt_table_allievi_mappa');
-        table.DataTable({
-            dom: `<'row'<'col-sm-12'ftr>><'row'<'col-sm-12 col-md-2'i><'col-sm-12 col-md-10 dataTables_pager'lp>>`,
-            lengthMenu: [15, 25, 50],
-            language: {
-                "lengthMenu": "Mostra _MENU_",
-                "infoEmpty": "Mostrati 0 di 0 per 0",
-                "loadingRecords": "Caricamento...",
-                "search": "Cerca:",
-                "zeroRecords": "Nessun risultato trovato",
-                "info": "Mostrati _END_ di _TOTAL_ ",
-                "emptyTable": "Nessun risultato",
-                "sInfoFiltered": "(filtrato su _MAX_ risultati totali)"
-            },
-            scrollX: true,
-            order: [],
-            columns: [
-                {data: 'nome'},
-                {data: 'cognome'},
-                {data: 'codicefiscale'},
-                {data: 'statopartecipazione.descrizione'},
-                {data: 'orerendicontabili', width: "60px"},
-                {defaultContent: ''},
-                {defaultContent: ''}
-            ],
-            drawCallback: function () {
-                $('[data-toggle="kt-tooltip"]').tooltip();
-            },
-            columnDefs: [
-                {
-                    targets: 5,
-                    className: 'text-center',
-                    orderable: false,
-                    render: function (data, type, row, meta) {
-                        if (row.progetto.stato.id === "MA") {
-                            var opt1 = '<span class="kt-switch kt-switch--outline kt-switch--icon kt-switch--success">'
-                                    + '<label>'
-                                    + '<input type="checkbox" data-toggle="toggle" name="mappatura_' + row.id + '" id="mappatura_' + row.id + '"/>'
-                                    + '<span></span> </label></span>';
-                            return opt1;
-                        } else {
-                            if (row.mappatura === 1 || row.mappatura === '1') {
-                                return "SI";
-                            } else {
-                                return "NO";
-                            }
-                        }
-                    }
-                }, {
-                    targets: 6,
-                    className: 'text-center',
-                    orderable: false,
-                    width: "250px",
-                    render: function (data, type, row, meta) {
-                        if (row.progetto.stato.id === "MA") {
-                            $("#salvamappatura").toggle(true);
-                            var ta_as = '<textarea class="form-control" placeholder="Inserire eventuali note PRIMA di salvare" name="notesmappatura_'
-                                    + row.id + '" id="notesmappatura_' + row.id
-                                    + '" rows="3" style="overflow: hidden; overflow-wrap: break-word; resize: none; height: 71px;" onchange="return fieldNOSPecial_2(this.id)"></textarea>';
-
-                            return ta_as;
-                        } else {
-                            $("#salvamappatura").toggle(false);
-                            if (row.mappatura_note === null || row.mappatura_note === 'null') {
-                                return "";
-                            } else {
-                                return row.mappatura_note;
-                            }
-                        }
-                    }
-                }]
-        });
-    };
     return {
         init: function () {
             initTableAllievi();
-            initMappaAllievi();
             initPdfAllievi();
             initTablePresenzeAllievi();
         }

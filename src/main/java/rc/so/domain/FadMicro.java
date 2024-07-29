@@ -5,7 +5,6 @@
  */
 package rc.so.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import static rc.so.db.Action.insertTR;
 import static rc.so.util.Utility.estraiEccezione;
 import java.io.Serializable;
@@ -25,6 +24,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import static rc.so.util.Utility.OM;
 
 /**
  *
@@ -114,7 +114,7 @@ public class FadMicro implements Serializable {
         this.partecipanti = partecipanti;
         if (this.partecipanti != null && !this.partecipanti.equals("") && this.list_partecipanti.isEmpty()) {
             try {
-                this.list_partecipanti = Arrays.asList(new ObjectMapper().readValue(this.partecipanti, String[].class));
+                this.list_partecipanti = Arrays.asList(OM.readValue(this.partecipanti, String[].class));
             } catch (Exception ex) {
                 insertTR("E", "SERVICE", estraiEccezione(ex));
             }
@@ -124,7 +124,7 @@ public class FadMicro implements Serializable {
     public List<String> getList_partecipanti() {
         if (this.partecipanti != null && !this.partecipanti.equals("") && this.list_partecipanti.isEmpty()) {
             try {
-                this.list_partecipanti = Arrays.asList(new ObjectMapper().readValue(this.partecipanti, String[].class));
+                this.list_partecipanti = Arrays.asList(OM.readValue(this.partecipanti, String[].class));
             } catch (Exception ex) {
                 insertTR("E", "SERVICE", estraiEccezione(ex));
             }

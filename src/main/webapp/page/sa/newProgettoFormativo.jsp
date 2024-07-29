@@ -244,9 +244,6 @@
                                                                                               data-content="La data di chiusura non pu&#242; essere successiva ai 45 gg solari dalla data di avvio, 
                                                                               la data di chiusura effettiva sar&#224; comunicata con la dichiarazione di chiusura percorso."></i>
                                                                             </label><label class="kt-font-danger kt-font-boldest">*</label>
-                                                                            
-                                                                              
-                                                                            
                                                                             <input type="text" class="form-control obbligatory" name="date" id="kt_daterange" 
                                                                                    value="" placeholder="Date Inizio e Fine" readonly autocomplete="off" />
                                                                         </div>

@@ -5,7 +5,6 @@
  */
 package rc.so.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.gson.JsonObject;
 import rc.so.db.Database;
@@ -97,6 +96,7 @@ import rc.so.domain.MotivazioneNO;
 import rc.so.domain.Presenze_Lezioni;
 import rc.so.domain.Presenze_Lezioni_Allievi;
 import rc.so.domain.TipoDoc_Allievi;
+import static rc.so.util.Utility.OM;
 import static rc.so.util.Utility.convertHours;
 import static rc.so.util.Utility.estraiEccezione;
 import static rc.so.util.Utility.getRequestValue;
@@ -126,6 +126,8 @@ public class OperazioniMicro extends HttpServlet {
             String idpresenza = getRequestValue(request, "idpresenza");
             String convalidate = getRequestValue(request, "convalidate");
 
+//            Utility.printRequest(request);
+            
             if (tipo.equals("1")) {
                 Date d1 = new Date(Long.parseLong(getRequestValue(request, "datalez")));
 
@@ -564,14 +566,12 @@ public class OperazioniMicro extends HttpServlet {
             }
             //RAF 29/06 mail di istruzioni sa
             if (stato_prec.equals("DC") && stato_succ.equals("ATA")) {
-                if (!Utility.demoversion) {
                     Email email_txt = e.getEmail("sa_start");
                     SendMailJet.sendMail(
                             e.getPath("mailsender"),
                             new String[]{p.getSoggetto().getEmail()},
                             email_txt.getTesto(),
                             email_txt.getOggetto());
-                }
             }
 
             resp.addProperty("result", check);
@@ -680,8 +680,7 @@ public class OperazioniMicro extends HttpServlet {
                 ore_ric = Double.parseDouble(hhmm[0]) + (Double.parseDouble(hhmm[1]) / 60);
                 p.setOre_riconosciute(ore_ric);
             }
-            ObjectMapper mapper = new ObjectMapper();
-            doc.setPresenti(mapper.writeValueAsString(presenti));
+            doc.setPresenti(OM.writeValueAsString(presenti));
             e.merge(doc);
             e.commit();
             resp.addProperty("result", true);
@@ -1068,14 +1067,13 @@ public class OperazioniMicro extends HttpServlet {
             ArrayList<String> cip = new ArrayList<>();
             ProgettiFormativi prg;
             for (String s : progetti) {
-                prg = e.getEm().find(ProgettiFormativi.class, Long.parseLong(s));
+                prg = e.getEm().find(ProgettiFormativi.class, Long.valueOf(s));
                 prgs.add(prg);
                 cip.add(prg.getCip());
             }
 
-            ObjectMapper mapper = new ObjectMapper();
             String path = null;
-            e.persist(new Estrazioni(today, mapper.writeValueAsString(cip), path));
+            e.persist(new Estrazioni(today, OM.writeValueAsString(cip), path));
 
             for (ProgettiFormativi p : prgs) {
                 p.setExtract(2);
@@ -1103,8 +1101,7 @@ public class OperazioniMicro extends HttpServlet {
         Entity e = new Entity();
         SoggettiAttuatori sa = e.getUserPiva(piva);
         e.close();
-        ObjectMapper mapper = new ObjectMapper();
-        response.getWriter().write(mapper.writeValueAsString(sa));
+        response.getWriter().write(OM.writeValueAsString(sa));
     }
 
     protected void checkCF(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -1114,8 +1111,7 @@ public class OperazioniMicro extends HttpServlet {
         Entity e = new Entity();
         SoggettiAttuatori sa = e.getUserCF(cf);
         e.close();
-        ObjectMapper mapper = new ObjectMapper();
-        response.getWriter().write(mapper.writeValueAsString(sa));
+        response.getWriter().write(OM.writeValueAsString(sa));
     }
 
     protected void uploadPec(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -1123,7 +1119,7 @@ public class OperazioniMicro extends HttpServlet {
 
         Entity e = new Entity();
         try {
-            SoggettiAttuatori sa = e.getEm().find(SoggettiAttuatori.class, Long.parseLong(request.getParameter("idsa")));
+            SoggettiAttuatori sa = e.getEm().find(SoggettiAttuatori.class, Long.valueOf(request.getParameter("idsa")));
             String today = new SimpleDateFormat("yyyyMMddHHssSSS").format(new Date());
             e.begin();
             String piva = getRequestValue(request, "piva_sa").trim();
@@ -1374,21 +1370,13 @@ public class OperazioniMicro extends HttpServlet {
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-            ObjectMapper mapper = new ObjectMapper();
-
             String link = e.getPath("linkfad");
-            String dominio;
-            if (request.getContextPath().contains("Enm_NEET")) {
-                dominio = "http://172.31.224.48:8080/Enm_NEET/";
-            } else {
-                dominio = e.getPath("dominio");
-            }
-
+            String dominio = e.getPath("dominio");
             e.begin();
             FadMicro f = new FadMicro();
             f.setNomestanza(nome_fad);
             f.setPassword(pwd);
-            f.setPartecipanti(mapper.writeValueAsString(emails));
+            f.setPartecipanti(OM.writeValueAsString(emails));
             f.setUser((User) request.getSession().getAttribute("user"));
             f.setDatacreazione(new Date());
             f.setInizio(sdf.parse(date[0].trim()));
@@ -1444,12 +1432,11 @@ public class OperazioniMicro extends HttpServlet {
             String[] date = request.getParameter("range").split("-");
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-            ObjectMapper mapper = new ObjectMapper();
             e.begin();
 
-            FadMicro f = e.getEm().find(FadMicro.class, Long.parseLong(request.getParameter("idFad")));
+            FadMicro f = e.getEm().find(FadMicro.class, Long.valueOf(request.getParameter("idFad")));
             f.setNomestanza(nome_fad);
-            f.setPartecipanti(mapper.writeValueAsString(emails));
+            f.setPartecipanti(OM.writeValueAsString(emails));
             f.setInizio(sdf.parse(date[0].trim()));
             f.setFine(sdf.parse(date[1].trim()));
 
@@ -2648,6 +2635,7 @@ public class OperazioniMicro extends HttpServlet {
                     cfinal.setValore_unitario_condizionalita(parseDouble(request.getParameter("valunitario")));
                     cfinal.setTab_neet_fa(Utility.createJsonCL(request.getParameter("fa_controllo_ore")));
                     cfinal.setTab_neet_fb(Utility.createJsonCL(request.getParameter("fb_controllo_ore")));
+                    cfinal.setTab_docenza_fa(Utility.createJsonCL(request.getParameter("dc_controllo_ore")));
                     if (cfinal.getStep() < 3) {
                         cfinal.setStep(3);
                     }

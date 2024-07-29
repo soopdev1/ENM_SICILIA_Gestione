@@ -2234,33 +2234,6 @@ public class OperazioniSA extends HttpServlet {
                 p.setModello2_check(1);
             }
 
-//            if (dates_modified) {
-//                String lezioniIds = "- ModifyPrg, Cambio date progetto: id_lezionimodelli M3 ( ";
-//                ModelliPrg m3 = p.getModelli().stream().filter(s -> s.getModello() == 3).findFirst().orElse(null);
-//                if (m3 != null) {
-//                    m3.setStato("S");
-//                    for (Lezioni_Modelli l : m3.getLezioni()) {
-//                        lezioniIds += String.valueOf(l.getId()) + " ";
-//                        l.setModello(null);
-//                    }
-//                    lezioniIds += ") SET NULL -  id_modelli_progetto: " + String.valueOf(m3.getId()) + " - progetto_formativo: " + String.valueOf(p.getId());
-//                    e.merge(m3);
-//                    e.persist(new Tracking(String.valueOf(((User) request.getSession().getAttribute("user")).getId()), lezioniIds));
-//                }
-//
-//                lezioniIds = " ModifyPrg, Cambio date progetto: id_lezionimodelli M4 ( ";
-//                ModelliPrg m4 = p.getModelli().stream().filter(s -> s.getModello() == 4).findFirst().orElse(null);
-//                if (m4 != null) {
-//                    m4.setStato("R");
-//                    for (Lezioni_Modelli l : m4.getLezioni()) {
-//                        lezioniIds += String.valueOf(l.getId()) + " ";
-//                        l.setModello(null);
-//                    }
-//                    lezioniIds += ") SET NULL -  id_modelli_progetto: " + String.valueOf(m3.getId()) + " - progetto_formativo: " + String.valueOf(p.getId());
-//                    e.merge(m3);
-//                    e.persist(new Tracking(String.valueOf(((User) request.getSession().getAttribute("user")).getId()), lezioniIds));
-//                }
-//            }
             e.merge(p);
             e.commit();
 
@@ -4823,7 +4796,7 @@ public class OperazioniSA extends HttpServlet {
                                 allievo_orai = "00:00";
                                 allievo_oraf = "00:00";
                             } else {
-                                allievo_durata = calcolaMillis(orai, oraf);
+                                allievo_durata = calcolaMillis(allievo_orai, allievo_oraf);
                             }
                             //PERSIST
                             Presenze_Lezioni_Allievi pla = new Presenze_Lezioni_Allievi();

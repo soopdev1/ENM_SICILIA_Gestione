@@ -136,7 +136,7 @@ function changeLezione(idlezione, l) {
                 $('#orario1_start').val(checktime($('#orario1_start').val(), '8:00', $('#orario1_end').val()));
             });
             $('#orario1_end').change(function (e) {
-                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '21:00'));
+                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -287,7 +287,7 @@ function changeLezioneDouble(idlezione1, idlezione2, l) {
                 $('#orario2_start').val(checktime($('#orario2_start').val(), $('#orario1_end').val(), $('#orario2_end').val()));
             });
             $('#orario2_end').change(function (e) {
-                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '21:00'));
+                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -388,13 +388,6 @@ function uploadLezione(idprogetto, idm, idl, ud, sedefisica) {
                 daysOfWeekDisabled: [0]
             });
 
-
-
-
-
-
-
-
             $('#orario1_start').val(orario_default_start);
             $('#orario1_end').val(orario_default_end);
             $('#orario1_start').timepicker("setTime", orario_default_start);
@@ -468,7 +461,7 @@ function uploadLezione(idprogetto, idm, idl, ud, sedefisica) {
                 $('#orario1_start').val(checktime($('#orario1_start').val(), '8:00', $('#orario1_end').val()));
             });
             $('#orario1_end').change(function (e) {
-                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '21:00'));
+                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -623,7 +616,7 @@ function uploadLezioneDouble(idprogetto, idm, idl) {
                 $('#orario2_start').val(checktime($('#orario2_start').val(), $('#orario1_end').val(), $('#orario2_end').val()));
             });
             $('#orario2_end').change(function (e) {
-                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '21:00'));
+                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '22:00'));
             });
 //            $('#giorno').change(function (e) {
 //                checkRegistroAlievoExist(idallievo, $(this).val());

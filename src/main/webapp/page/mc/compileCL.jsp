@@ -527,9 +527,11 @@
                                                                             <div class="col-4"><%=al.getNome()%> <%=al.getCognome()%></div>
                                                                             <div class="col-2"><input style="background-color: rgb(237, 243, 255)!important;" class="form-control decimal_custom" 
                                                                                                       disabled="disabled" type="text" 
-                                                                                                      value="<%=al.getOrec_faseb()%>" name="fb_ore_<%=al.getId()%>" id="fb_ore_<%=al.getId()%>" /></div>
+                                                                                                      value="<%=al.getOrec_faseb()%>" name="fb_ore_<%=al.getId()%>" 
+                                                                                                      id="fb_ore_<%=al.getId()%>" /></div>
                                                                             <div class="col-2"><input class="form-control decimal_custom obbligatory kt-font-bold kt-font-danger ctrl" type="text" 
-                                                                                                      value="<%=al.getOrec_faseb()%>" name="fb_controllo_ore_<%=al.getId()%>" id="fb_controllo_ore_<%=al.getId()%>" /></div>
+                                                                                                      value="<%=al.getOrec_faseb()%>" name="fb_controllo_ore_<%=al.getId()%>" 
+                                                                                                      id="fb_controllo_ore_<%=al.getId()%>" /></div>
                                                                             <div class="col-2"><input style="background-color: rgb(237, 243, 255)!important;" class="form-control decimal_custom"  disabled="disabled" type="text" value="<%=coeff_fb%>" name="fb_coeff_<%=al.getId()%>" id="fb_coeff_<%=al.getId()%>" /></div>
                                                                             <div class="col-2"><input style="background-color: rgb(237, 243, 255)!important;" class="form-control decimal_custom" disabled="disabled" type="text" name="fb_tot_<%=al.getId()%>" id="fb_tot_<%=al.getId()%>" /></div>
                                                                         </div>
@@ -543,8 +545,9 @@
                                                                     <div class="form-group" id="allievi_faseA">
                                                                         <div class="row">
                                                                             <div class="col-4"><b>Docenti</b></div>
-                                                                            <div class="col-3"><b>Controllo Ore Presenze Docente</b></div>
-                                                                            <div class="col-3"><b>Contributo €/H per fascia <small>(A: 82,26 - B: 65,81 - C: 41,13)</small></b></div>
+                                                                            <div class="col-2"><b>Ore Presenze Docente</b></div>
+                                                                            <div class="col-2"><b>Controllo Ore Presenze Docente</b></div>
+                                                                            <div class="col-2"><b>Contributo €/H per fascia <small>(A: 82,26 - B: 65,81 - C: 41,13)</small></b></div>
                                                                             <div class="col-2"><b>Totale</b></div>
                                                                         </div>
                                                                         <%for (Docenti al : docenti_tab) {
@@ -552,25 +555,40 @@
                                                                         %>
                                                                         <div class="row" id="dcrow_<%=al.getId()%>">
                                                                             <div class="col-4"><%=al.getNome()%> <%=al.getCognome()%></div>
-                                                                            <div class="col-3"><input class="form-control decimal_custom" disabled="disabled" type="text" 
-                                                                                                      value="<%=al.getOrec_faseA()%>" name="dc_ore_<%=al.getId()%>" id="dc_ore_<%=al.getId()%>" /></div>
-                                                                            <div class="col-3"><input style="background-color: rgb(237, 243, 255)!important;" class="form-control decimal_custom"  disabled="disabled" type="text" value="<%=fasceDocenti.get(al.getFascia().getId())%>" name="dc_coeff_<%=al.getId()%>" id="dc_coeff_<%=al.getId()%>" /></div>
-                                                                            <div class="col-2"><input style="background-color: rgb(237, 243, 255)!important;" class="form-control decimal_custom" disabled="disabled" type="text" name="dc_tot_<%=al.getId()%>" id="dc_tot_<%=al.getId()%>" /></div>
+                                                                            <div class="col-2"><input class="form-control decimal_custom" disabled="disabled" type="text" 
+                                                                                                      value="<%=al.getOrec_faseA()%>" 
+                                                                                                      name="dc_ore_<%=al.getId()%>" 
+                                                                                                      id="dc_ore_<%=al.getId()%>" /></div>
+                                                                            <div class="col-2"><input class="form-control decimal_custom obbligatory kt-font-bold kt-font-danger ctrl" type="text" 
+                                                                                                      value="<%=al.getOrec_faseA()%>" 
+                                                                                                      name="dc_controllo_ore_<%=al.getId()%>" 
+                                                                                                      id="dc_controllo_ore_<%=al.getId()%>" /></div>
+                                                                            <div class="col-2"><input style="background-color: rgb(237, 243, 255)!important;" 
+                                                                                                      class="form-control decimal_custom"  disabled="disabled" 
+                                                                                                      type="text" value="<%=fasceDocenti.get(al.getFascia().getId())%>" 
+                                                                                                      name="dc_coeff_<%=al.getId()%>" id="dc_coeff_<%=al.getId()%>" /></div>
+                                                                            <div class="col-2"><input style="background-color: rgb(237, 243, 255)!important;" 
+                                                                                                      class="form-control decimal_custom" disabled="disabled" type="text" name="dc_tot_<%=al.getId()%>" id="dc_tot_<%=al.getId()%>" /></div>
                                                                         </div>
                                                                         <%}%>
                                                                         <div class="row">
                                                                             <div class="col-10 kt-align-right"><b>Totale docenza FASE A</b></div>
-                                                                            <div class="col-2"><input style="background-color: rgb(219, 230, 253)!important;font-weight: 600;" class="form-control decimal_custom kt-font-io" disabled="disabled" type="text" id="dc_total" name="dc_total" /></div>
+                                                                            <div class="col-2"><input style="background-color: rgb(219, 230, 253)!important;font-weight: 600;" 
+                                                                                                      class="form-control decimal_custom kt-font-io" disabled="disabled" 
+                                                                                                      type="text" id="dc_total" name="dc_total" /></div>
                                                                         </div>
                                                                     </div> 
                                                                     <br>
                                                                     <label class="kt-font-io text-uppercase" style="font-weight: 800;">CALCOLO CONTRIBUTO AMMISSIBILE</label>
                                                                     <div class="form-group">
                                                                         <div class="row">
-                                                                            <div class="col-6"><b>Totale massimo ammissibile</b></div>                                                                            
+                                                                            <div class="col-3"><b>Totale massimo ammissibile</b></div> 
+                                                                            <div class="col-3"><b>30% a condizionalità</b></div>
+                                                                            <div class="col-3"><b>70% VCR a processo</b></div>
+                                                                            <div class="col-3"><b>Valore unitario condizionalità</b></div>
                                                                         </div>
                                                                         <div class="row" id="totalsrow">
-                                                                            <div class="col-"><input style="background-color: #e8f0ff!important; font-weight: 600;" class="form-control decimal_custom kt-font-io" disabled="disabled" type="text" id="maxammissibile" name="maxammissibile" /></div>
+                                                                            <div class="col-3"><input style="background-color: #e8f0ff!important; font-weight: 600;" class="form-control decimal_custom kt-font-io" disabled="disabled" type="text" id="maxammissibile" name="maxammissibile" /></div>
                                                                             
                                                                             <div class="col-3"><input style="background-color: #e8f0ff!important; font-weight: 600;" class="form-control decimal_custom kt-font-io" disabled="disabled" type="text" id="cond30" name="cond30" /></div>
                                                                             <div class="col-3"><input style="background-color: #e8f0ff!important; font-weight: 600;" class="form-control decimal_custom kt-font-io" disabled="disabled" type="text" id="vcr70" name="vcr70" /></div>

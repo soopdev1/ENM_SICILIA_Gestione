@@ -57,7 +57,10 @@ public class checklist_finale implements Serializable {
 
     @Column(name = "tab_neet_fb")
     private String tab_neet_fb;
-
+    
+    @Column(name = "tab_docenza_fa")
+    private String tab_docenza_fa;
+    
     @Column(name = "tot_docenza_fa")
     private double tot_docenza_fa;
 
@@ -101,6 +104,14 @@ public class checklist_finale implements Serializable {
 
     @OneToOne(mappedBy = "checklist_finale")
     private ProgettiFormativi progetto_formativo;
+
+    public String getTab_docenza_fa() {
+        return tab_docenza_fa;
+    }
+
+    public void setTab_docenza_fa(String tab_docenza_fa) {
+        this.tab_docenza_fa = tab_docenza_fa;
+    }
 
     public Long getId() {
         return id;

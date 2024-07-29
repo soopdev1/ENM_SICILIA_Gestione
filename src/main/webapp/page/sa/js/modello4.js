@@ -63,6 +63,9 @@ function setRangeDatesDay(giornoLezione, lezione, gruppo, daytoadd) {
     }
 
     giornoLezione = giornoLezione === null ? rangeDate_min : giornoLezione;
+    if (giornoLezione > rangeDate_max) {
+        return [rangeDate_min, giornoLezione, giornoLezione];
+    }
     return [rangeDate_min, rangeDate_max, giornoLezione];
 }
 
@@ -144,7 +147,7 @@ function changeLezione(idlezione, l, grp) {
                 $('#orario1_start').val(checktime($('#orario1_start').val(), '8:00', $('#orario1_end').val()));
             });
             $('#orario1_end').change(function (e) {
-                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '21:00'));
+                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -299,7 +302,7 @@ function changeLezioneDouble(idlezione1, idlezione2, l, grp) {
                 $('#orario2_start').val(checktime($('#orario2_start').val(), $('#orario1_end').val(), $('#orario2_end').val()));
             });
             $('#orario2_end').change(function (e) {
-                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '21:00'));
+                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -487,7 +490,7 @@ function uploadLezione(idprogetto, idm, idl, grp, ud, sedefisica) {
                 $('#orario1_start').val(checktime($('#orario1_start').val(), '8:00', $('#orario1_end').val()));
             });
             $('#orario1_end').change(function (e) {
-                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '21:00'));
+                $('#orario1_end').val(checktime($('#orario1_end').val(), $('#orario1_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -640,7 +643,7 @@ function uploadLezioneDouble(idprogetto, idm, idl, grp) {
                 $('#orario2_start').val(checktime($('#orario2_start').val(), $('#orario1_end').val(), $('#orario2_end').val()));
             });
             $('#orario2_end').change(function (e) {
-                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '21:00'));
+                $('#orario2_end').val(checktime($('#orario2_end').val(), $('#orario2_start').val(), '22:00'));
             });
         },
         preConfirm: function () {
@@ -715,9 +718,9 @@ function buttonsControl(lezioni, calendario, gruppo) {
     }
     cssPage(nrolezioni, gruppo);
     maplezioniD = new Map();
-    maplezioniD = new Map(filterAndGroupByG(tempLezioni, gruppo).map(i => 
-    [i.id, moment(new Date(i.giorno)).format("DD-MM-YYYY") 
-                + " ( Modulo " + i.lezione_calendario.ud1 + ")"]));
+    maplezioniD = new Map(filterAndGroupByG(tempLezioni, gruppo).map(i =>
+        [i.id, moment(new Date(i.giorno)).format("DD-MM-YYYY")
+                    + " ( Modulo " + i.lezione_calendario.ud1 + ")"]));
     if (maplezioniD.size > 0) {
         lessonsEditable = true;
         $('#deleteByGroup_' + gruppo).removeAttr('disabled');
@@ -748,7 +751,7 @@ function loadLezioni() {
 
 function filterAndGroupByG(options, group) {
     return options.reduce(function (res, option) {
-        if (new Date(new Date(option.giorno).toDateString()) >= today 
+        if (new Date(new Date(option.giorno).toDateString()) >= today
                 && option.gruppo_faseB === parseInt(group) && res.filter(e => e.giorno === option.giorno).length === 0) {
             res.push(option);
         }
@@ -1388,11 +1391,11 @@ jQuery(document).ready(function () {
         disableOptions();
 
         lezioniModello4 = loadLezioni();
-       // console.log(lezioniModello4);
+        // console.log(lezioniModello4);
         calendarioModello4 = loadCalendario();
 //        setDateInizioFine(lezioniModello4);
         for (let gr of numberGroups) {
-            
+
             buttonsControl(countLezioneEffettive(lezioniModello4, gr), mapCalendario.size, gr);
         }
         $('a.disablelink').removeAttr("onclick");

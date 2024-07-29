@@ -25,21 +25,21 @@ public class GeneraDoc {
         java.util.logging.Logger.getLogger(
                 "org.apache").setLevel(java.util.logging.Level.SEVERE);
 
-        String idpr = "213";
-        String idall = "597";
-        String usernameSA = "ASUDPALERMO";
+        String idpr = "217";
+//        String idall = "597";
+        String usernameSA = "AGROSCONSULTING";
 
         Entity e = new Entity();
         e.begin();
-//        ProgettiFormativi prg = e.getEm().find(ProgettiFormativi.class,
-//                Long.valueOf(idpr));
-        Allievi al = e.getEm().find(Allievi.class,
-                Long.valueOf(idall));
-        File m1 = Pdf_new.MODELLO1(e, "3", usernameSA,
-                al.getSoggetto(), al,
-                new DateTime(),
-                false,true);
-        System.out.println(m1.getPath());
+        ProgettiFormativi prg = e.getEm().find(ProgettiFormativi.class, Long.valueOf(idpr));
+
+//        Allievi al = e.getEm().find(Allievi.class,
+//                Long.valueOf(idall));
+//        File m1 = Pdf_new.MODELLO1(e, "3", usernameSA,
+//                al.getSoggetto(), al,
+//                new DateTime(),
+//                false,true);
+//        System.out.println(m1.getPath());
 //            Lezioni_Modelli lm = e.getEm().find(Lezioni_Modelli.class, 2L);
 //            File f1 = Pdf_new.REGISTROCARTACEO(e, "rcc", lm, new DateTime());
 //        ModelliPrg m3 = Utility.filterModello3(prg.getModelli());
@@ -111,13 +111,16 @@ public class GeneraDoc {
 //            System.out.println(f6.getPath());
 //        }
 //        Map<Long, Long> oreRendicontabili = Action.OreRendicontabiliAlunni((int) (long) prg.getId());
-//        File f7 = Pdf_new.MODELLO7(e, usernameSA, al, new DateTime(), true);
-//        System.out.println(f7.getPath());
-//        String pathtemp = e.getPath("pathtemp");
-//        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
-////        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
-//////        System.out.println(ch_pdf.getPath());
-//        System.out.println(ev_pdf.getPath());
+//        prg.getAllievi().stream().filter(p1 -> p1.getStatopartecipazione().getId().equals("15")).forEach(al -> {
+//            File f7 = Pdf_new.MODELLO7(e, usernameSA, al, new DateTime(), true);
+//            System.out.println(f7.getPath());
+//        });
+        String pathtemp = e.getPath("pathtemp");
+        File ch_pdf = Pdf_new.CHECKLIST(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+        System.out.println(ch_pdf.getPath());
+        
+        File ev_pdf = Pdf_new.ESITOVALUTAZIONE(pathtemp, e, usernameSA, prg.getSoggetto(), prg, new DateTime(), true);
+        System.out.println(ev_pdf.getPath());
 
         //richiesta accreditamento aula 
 //        List<SediFormazione> lsf = new ArrayList<>();

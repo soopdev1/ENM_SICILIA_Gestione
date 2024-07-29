@@ -8,6 +8,7 @@ var context = document.getElementById("compileCL").getAttribute("data-context");
 let step1_loaded = false;
 let allievi_fa = new Map();
 let allievi_fb = new Map();
+let docenti_fa = new Map();
 let allievi_mappati = new Map();
 let allievi_outputs = new Map();
 let allievi_bp = new Map();
@@ -66,6 +67,18 @@ $('.decimal_custom.ctrl[id^=fb_controllo_ore_]').on('change', function () {
     $('#fb_total').val(DotToComma(totalB));
 });
 
+$('.decimal_custom.ctrl[id^=dc_controllo_ore_]').on('change', function () {
+    let docente = this.id.split("_")[3];
+    this.value = completeOre(this.value, $('#dc_ore_' + docente).val());
+    let totalB = 0;
+    let calcD1 = CommaToDot($('#dc_coeff_' + docente).val()) * CommaToDot($('#dc_controllo_ore_' + docente).val());
+    $('#dc_tot_' + docente).val(DotToComma(calcD1));
+    $(".decimal_custom[id^=dc_tot_]").each(function () {
+        totalB += Number(CommaToDot(this.value));
+    });
+    $('#dc_total').val(DotToComma(totalB));
+});
+
 $('.decimal_custom.ctrl').on('change', function () {
     setTotals();
 });
@@ -119,7 +132,7 @@ function setTableDocenti() {
     let temp;
     $('div[id^=dcrow_]').each(function () {
         alunno = this.id.split("_")[1];
-        temp = CommaToDot($('#dc_coeff_' + alunno).val()) * CommaToDot($('#dc_ore_' + alunno).val());
+        temp = CommaToDot($('#dc_coeff_' + alunno).val()) * CommaToDot($('#dc_controllo_ore_' + alunno).val());
         $('#dc_tot_' + alunno).val(DotToComma(temp));
     });
     let totalB = 0;
@@ -173,13 +186,13 @@ function recap() {
     allievi_fb.forEach((v, k) => {
         $('#recapfb_' + k).val($('#fb_tot_' + k).val());
     });
+    docenti_fa.forEach((v, k) => {
+        $('#recapdc_' + k).val($('#dc_tot_' + k).val());
+    });
     allievi_outputs.forEach((v, k) => {
         if (v === "1") {
             $('#recapmap_' + k).val("SI");
         }
-    });
-    $('div[id^=dcrow_]').each(function () {
-        $('#recapdc_' + this.id.split("_")[1]).val($('#dc_tot_' + this.id.split("_")[1]).val());
     });
 
     $('#recap_totfa_allievi').val($('#fa_total').val());
@@ -244,8 +257,18 @@ function step2_load(dati) {
             calc = Number(CommaToDot($('#fb_coeff_' + tempID).val())) * Number(allievi_fb.get(tempID));
             $('#fb_tot_' + tempID).val(DotToComma(calc));
         });
+
+        if (dati.cl.tab_docenza_fa !== null && dati.cl.tab_docenza_fa !== "") {
+            $('.decimal_custom.ctrl[id^=dc_controllo_ore_]').each(function () {
+                tempID = this.id.split("_")[3];
+                this.value = DotToComma(docenti_fa.get(tempID));
+                calc = Number(CommaToDot($('#dc_coeff_' + tempID).val())) * Number(docenti_fa.get(tempID));
+                $('#dc_tot_' + tempID).val(DotToComma(calc));
+            });
+        } 
         setTableFaseA();
         setTableFaseB();
+        setTableDocenti();
         $('#step2_ok').show();
     } else {
         $('#step2_ko').show();
@@ -427,10 +450,17 @@ $('a[id=save_step2]').on('click', function () {
                 tempID = this.id.split("_")[3];
                 fb_controllo_ore += tempID + "=" + CommaToDot(this.value) + "=" + CommaToDot($('#fb_tot_' + tempID).val()) + ";";
             });
+            let dc_controllo_ore = "";
+            $('input[id^=dc_controllo_ore_]').each(function () {
+                tempID = this.id.split("_")[3];
+                dc_controllo_ore += tempID + "=" + CommaToDot(this.value) + "=" + CommaToDot($('#dc_tot_' + tempID).val()) + ";";
+            });
             let fdata = new FormData();
             fdata.append("pf", $("#pf").val());
             fdata.append("fa_controllo_ore", fa_controllo_ore);
             fdata.append("fb_controllo_ore", fb_controllo_ore);
+            fdata.append("dc_controllo_ore", dc_controllo_ore);
+            
             fdata.append("fa_total", CommaToDot($("#fa_total").val()));
             fdata.append("fb_total", CommaToDot($("#fb_total").val()));
             fdata.append("dc_total", CommaToDot($("#dc_total").val()));
@@ -505,7 +535,7 @@ $('a[id=save_step3]').on('click', function () {
             fdata.append("mappatura", mappati);
             fdata.append("allievi_output_ok", $("#allievi_output_ok").val());
             fdata.append("tot_contributo_ammesso", CommaToDot($("#tot_contributo_ammesso").val()));
-            fdata.append("nota_controllore", tinymce.get("nota_controllore").getContent({ format: 'text' }));
+            fdata.append("nota_controllore", tinymce.get("nota_controllore").getContent({format: 'text'}));
             //fdata.append("nota_controllore", $("#nota_controllore").val());
             fdata.append("step", 3);
             $.ajax({
@@ -562,6 +592,15 @@ function load_Checklist() {
         allievi_fa = new Map(JSON.parse(ret.cl.tab_neet_fa).map(i => [i.id, i.ore]));
         allievi_fb = new Map(JSON.parse(ret.cl.tab_neet_fb).map(i => [i.id, i.ore]));
     }
+
+    try {
+        if (ret.cl !== null && ret.cl !== "" && ret.cl.tab_docenza_fa !== null && ret.cl.tab_docenza_fa !== "") {
+            docenti_fa = new Map(JSON.parse(ret.cl.tab_docenza_fa).map(i => [i.id, i.ore]));
+        }
+    } catch (e) {
+
+    }
+
     if (ret.allievi !== null && ret.allievi !== "") {
         allievi_bp = new Map(JSON.parse(ret.allievi).map(i => [i.id, i.bp]));
     }

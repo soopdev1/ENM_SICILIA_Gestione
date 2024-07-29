@@ -75,10 +75,9 @@ var KTBootstrapDaterangepicker = function () {
                 ]
             }
         }, function (start, end, label) {
-            var maxl = 45;
-            var maxlreal = 60;
+            var maxl = 90;
             var diff = end.diff(start, 'days', false) + 1;
-            if (diff > maxlreal) {
+            if (diff > maxl) {
                 $('#kt_daterange').val('');
                 start = null;
                 end = null;

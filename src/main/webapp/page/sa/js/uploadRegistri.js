@@ -117,7 +117,7 @@ function changeRegistro(idallievo, iddocumento, idprogetto, totalems) {
                     } else {
                         $('#check').prop('checked', false);
                         $('#orario2_start').val(formattedTime(json.orarioend_mattina));
-                        $('#orario2_end').val('21:00');
+                        $('#orario2_end').val('22:00');
 //                        var mintoadd = 1800000;
 //                        $('#orario2_start').val(formattedTime(json.orarioend_mattina + mintoadd));
 //                        $('#orario2_end').val(formattedTime(json.orarioend_mattina + mintoadd));
