@@ -816,7 +816,7 @@ public class Pdf_new {
                 setFieldsValue(form, fields, "DATAINIZIO", sdfITA.format(pf.getStart()));
                 setFieldsValue(form, fields, "DATAFINE", sdfITA.format(pf.getEnd()));
 
-                setFieldsValue(form, fields, "TOTALE", Utility.roundFloatAndFormat(parseFloat(String.valueOf(pf.getChecklist_finale().getTot_contributo_ammesso())), false) + " €");               
+                setFieldsValue(form, fields, "TOTALE", Utility.roundFloatAndFormat(parseFloat(String.valueOf(pf.getChecklist_finale().getTot_contributo_ammesso())), false) + " €");
                 List<OreId> list_orecontrollatefaseA = Arrays.asList(OM.readValue(pf.getChecklist_finale().getTab_neet_fa(), OreId[].class));
                 List<OreId> list_orecontrollatefaseB = Arrays.asList(OM.readValue(pf.getChecklist_finale().getTab_neet_fb(), OreId[].class));
                 String ored = pf.getChecklist_finale().getTab_docenza_fa() == null ? "[]" : pf.getChecklist_finale().getTab_docenza_fa();
@@ -952,8 +952,6 @@ public class Pdf_new {
                     setFieldsValue(form, fields, "INPS", "NO");
                 }
                 //PAG 2
-
-                
 
                 List<OreId> list_orecontrollatefaseA = Arrays.asList(OM.readValue(pf.getChecklist_finale().getTab_neet_fa(), OreId[].class));
                 List<OreId> list_orecontrollatefaseB = Arrays.asList(OM.readValue(pf.getChecklist_finale().getTab_neet_fb(), OreId[].class));
@@ -2681,7 +2679,7 @@ public class Pdf_new {
 
     public static String formatStatoNascita(String stato_nascita, List<Nazioni_rc> nascitaconCF) {
         try {
-            if (stato_nascita.equals("100")) {
+            if (stato_nascita.equals("99") || stato_nascita.equals("100")) {
                 return "ITALIA";
             } else {
                 Nazioni_rc nn = nascitaconCF.stream().filter(
